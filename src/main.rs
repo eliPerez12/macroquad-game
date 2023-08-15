@@ -1,5 +1,10 @@
 use macroquad::prelude::*;
 
+
+const GRASS1_SOURCE: Rect = Rect{x: 0.0, y: 0.0, w: 8.0, h: 8.0};
+const GRASS2_SOURCE: Rect = Rect{x: 0.0, y: 3.0 * 8.0, w: 8.0, h: 8.0};
+
+
 fn conf() -> Conf {
     Conf {
         window_title: String::from("Macroquad"),
@@ -20,6 +25,11 @@ fn default_camera_zoom() -> Vec2 {
     vec2(1.0 / screen_width(), 1.0 / screen_height())
 }
 
+struct Player {
+    pos: Vec2,
+    vel: Vec2,
+}
+
 #[macroquad::main(conf)]
 async fn main() {
 
@@ -28,46 +38,88 @@ async fn main() {
         ..Default::default()
     };
 
-    let mut camera_zoom = 1.0;
-
-    let tiles_sheet = Texture2D::from_file_with_format(
-        include_bytes!("assets/jawbreaker_tiles.png"),
-        Some(ImageFormat::Png));
+    let tiles_sheet = Texture2D::from_image(&load_image("assets/jawbreaker_tiles.png").await.unwrap());
     tiles_sheet.set_filter(FilterMode::Nearest);
+
+    let mut player = Player {pos: Vec2::ZERO, vel: Vec2::ZERO};
     
     // Main game loop
     loop {
         clear_background(BLACK);
 
-        let camera_speed = 1.0;
+        let player_acc = 0.305;
+        let player_max_vel = 1.0;
+        
+        if player.vel.x > 0.0 {
+            player.vel.x -= 0.3;
+            player.vel.x = player.vel.x.max(0.0);
+        }
+        if player.vel.y > 0.0 {
+            player.vel.y -= 0.3;
+            player.vel.y = player.vel.y.max(0.0);
+        }
+        if player.vel.x < 0.0 {
+            player.vel.x += 0.3;
+            player.vel.x = player.vel.x.min(0.0);
+        }
+        if player.vel.y < 0.0 {
+            player.vel.y += 0.3;
+            player.vel.y = player.vel.y.min(0.0);
+        }
 
         if is_key_down(KeyCode::W) {
-            camera.target.y -= camera_speed;
+            player.vel.y -= player_acc;
         }
         if is_key_down(KeyCode::S) {
-            camera.target.y += camera_speed;
+            player.vel.y += player_acc;
         }
         if is_key_down(KeyCode::A) {
-            camera.target.x -= camera_speed;
+            player.vel.x -= player_acc;
         }
         if is_key_down(KeyCode::D) {
-            camera.target.x += camera_speed;
+            player.vel.x += player_acc;
         }
 
         if is_key_down(KeyCode::Q) {
-            camera_zoom *= 1.01;
+            camera.zoom *= 1.01;
         }
         if is_key_down(KeyCode::E) {
-            camera_zoom /= 1.01;
+            camera.zoom /= 1.01;
+        }
+        
+        if player.vel.x > player_max_vel {
+            player.vel.x = player_max_vel;
+        }
+        if player.vel.x < -player_max_vel {
+            player.vel.x = -player_max_vel;
+        }
+        if player.vel.y > player_max_vel {
+            player.vel.y = player_max_vel;
+        }
+        if player.vel.y < -player_max_vel {
+            player.vel.y = -player_max_vel;
         }
 
-    
-        draw_texture_ex(&tiles_sheet, 0.0, 0.0, WHITE, DrawTextureParams {
-            dest_size: Some(Vec2::new(8.0, 8.0)),
-            source: Some(Rect::new(7.0 * 8.0, 2.0 * 8.0, 8.0, 8.0)),
-                ..Default::default()
+
+        player.pos += player.vel;
+        let camera_dist_from_player = camera.target - player.pos;
+        camera.target -= camera_dist_from_player/20.0;
+
+        set_camera(&mut camera);
+        // Draw world
+        for y in 0..20 {
+            for x in 0..20 {
+                draw_texture_ex(&tiles_sheet, 8.0 * x as f32, 8.0* y as f32, WHITE, DrawTextureParams {
+                    dest_size: Some(Vec2::new(8.0, 8.0)),
+                    source: Some(GRASS2_SOURCE),
+                        ..Default::default()
+                    }
+                );
             }
-        );
+        }
+        // Draw player
+        draw_rect(&Rect::new(player.pos.x, player.pos.y, 8.0,8.0), RED);
+        
         // Draw in screen space
         set_default_camera();
         draw_text(&get_fps().to_string(), 50.0, 50.0, 100.0, WHITE);
