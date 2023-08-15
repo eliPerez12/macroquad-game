@@ -1,32 +1,19 @@
 use macroquad::prelude::*;
+use camera::*;
 
-fn get_src_rect(grid_x: i32, grid_y: i32) -> Rect {
+mod camera;
+
+fn get_src_rect(atlas_grid_x: i32, atlas_grid_y: i32) -> Rect {
     Rect {
-        x: grid_x as f32 * 8.0,
-        y: grid_y as f32 * 8.0,
+        x: atlas_grid_x as f32 * 8.0,
+        y: atlas_grid_y as f32 * 8.0,
         w: 8.0,
         h: 8.0,
     }
 }
 
-fn conf() -> Conf {
-    Conf {
-        window_title: String::from("Macroquad"),
-        window_width: 1260,
-        window_height: 768,
-        fullscreen: false,
-        ..Default::default()
-    }
-}
-
-// draw texture in grid
-
 fn draw_rect(rect: &Rect, color: Color) {
-    draw_rectangle(rect.x, rect.y, rect.w, rect.h, color)
-}
-
-fn default_camera_zoom() -> Vec2 {
-    vec2(1.0 / screen_width(), 1.0 / screen_height())
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
 }
 
 struct Player {
@@ -34,10 +21,65 @@ struct Player {
     vel: Vec2,
 }
 
+impl Player {
+    fn handle_player_movements(&mut self) {
+        const PLAYER_ACC: f32 = 0.08;
+        const PLAYER_DEACC:  f32 = 0.05;
+        let player_max_vel: f32 = match is_key_down(KeyCode::LeftShift) {
+            true => 0.55,
+            false => 0.33
+        };
+
+        if self.vel.x > 0.0 {
+            self.vel.x -= PLAYER_DEACC;
+            self.vel.x = self.vel.x.max(0.0);
+        }
+        if self.vel.y > 0.0 {
+            self.vel.y -= PLAYER_DEACC;
+            self.vel.y = self.vel.y.max(0.0);
+        }
+        if self.vel.x < 0.0 {
+            self.vel.x += PLAYER_DEACC;
+            self.vel.x = self.vel.x.min(0.0);
+        }
+        if self.vel.y < 0.0 {
+            self.vel.y += PLAYER_DEACC;
+            self.vel.y = self.vel.y.min(0.0);
+        }
+
+        if is_key_down(KeyCode::W) {
+            self.vel.y -= PLAYER_ACC;
+        }
+        if is_key_down(KeyCode::S) {
+            self.vel.y += PLAYER_ACC;
+        }
+        if is_key_down(KeyCode::A) {
+            self.vel.x -= PLAYER_ACC;
+        }
+        if is_key_down(KeyCode::D) {
+            self.vel.x += PLAYER_ACC;
+        }
+
+        if self.vel.x > player_max_vel {
+            self.vel.x = player_max_vel;
+        }
+        if self.vel.x < -player_max_vel {
+            self.vel.x = -player_max_vel;
+        }
+        if self.vel.y > player_max_vel {
+            self.vel.y = player_max_vel;
+        }
+        if self.vel.y < -player_max_vel {
+            self.vel.y = -player_max_vel;
+        }
+
+        self.pos += self.vel;
+    }
+}
+
 #[macroquad::main(conf)]
 async fn main() {
-    let mut camera = Camera2D {
-        zoom: default_camera_zoom(),
+    let mut camera = GameCamera {
         ..Default::default()
     };
 
@@ -52,40 +94,9 @@ async fn main() {
 
     // Main game loop
     loop {
-        clear_background(BLACK);
+        // Update Game
+        player.handle_player_movements();
 
-        let player_acc = 0.305;
-        let player_max_vel = 0.8;
-
-        if player.vel.x > 0.0 {
-            player.vel.x -= 0.3;
-            player.vel.x = player.vel.x.max(0.0);
-        }
-        if player.vel.y > 0.0 {
-            player.vel.y -= 0.3;
-            player.vel.y = player.vel.y.max(0.0);
-        }
-        if player.vel.x < 0.0 {
-            player.vel.x += 0.3;
-            player.vel.x = player.vel.x.min(0.0);
-        }
-        if player.vel.y < 0.0 {
-            player.vel.y += 0.3;
-            player.vel.y = player.vel.y.min(0.0);
-        }
-
-        if is_key_down(KeyCode::W) {
-            player.vel.y -= player_acc;
-        }
-        if is_key_down(KeyCode::S) {
-            player.vel.y += player_acc;
-        }
-        if is_key_down(KeyCode::A) {
-            player.vel.x -= player_acc;
-        }
-        if is_key_down(KeyCode::D) {
-            player.vel.x += player_acc;
-        }
         if is_key_down(KeyCode::Q) {
             camera.zoom *= 1.01;
         }
@@ -93,25 +104,12 @@ async fn main() {
             camera.zoom /= 1.01;
         }
 
-        if player.vel.x > player_max_vel {
-            player.vel.x = player_max_vel;
-        }
-        if player.vel.x < -player_max_vel {
-            player.vel.x = -player_max_vel;
-        }
-        if player.vel.y > player_max_vel {
-            player.vel.y = player_max_vel;
-        }
-        if player.vel.y < -player_max_vel {
-            player.vel.y = -player_max_vel;
-        }
-
-        player.pos += player.vel;
-        let camera_dist_from_player = camera.target - player.pos;
-        camera.target -= camera_dist_from_player / 17.5;
+        camera.pan_to_target(player.pos + Vec2::new(4.0, 4.0));
 
         // Draw in world space
         set_camera(&mut camera);
+        clear_background(BLACK);
+
         for y in 0..20 {
             for x in 0..20 {
                 draw_texture_ex(
@@ -121,7 +119,7 @@ async fn main() {
                     WHITE,
                     DrawTextureParams {
                         dest_size: Some(Vec2::new(8.0, 8.0)),
-                        source: Some(get_src_rect(0, 0)),
+                        source: Some(get_src_rect(1, 0)),
                         ..Default::default()
                     },
                 );
@@ -135,5 +133,15 @@ async fn main() {
         draw_text(&get_fps().to_string(), 50.0, 50.0, 100.0, WHITE);
 
         next_frame().await;
+    }
+}
+
+fn conf() -> Conf {
+    Conf {
+        window_title: String::from("Macroquad"),
+        window_width: 1260,
+        window_height: 768,
+        fullscreen: false,
+        ..Default::default()
     }
 }
