@@ -34,7 +34,7 @@ async fn main() {
         include_bytes!("assets/jawbreaker_tiles.png"),
         Some(ImageFormat::Png));
     tiles_sheet.set_filter(FilterMode::Nearest);
-
+    
     // Main game loop
     loop {
         clear_background(BLACK);
@@ -61,20 +61,13 @@ async fn main() {
             camera_zoom /= 1.01;
         }
 
-        // Draw in world space
-        set_camera(&camera);
-        camera.zoom = default_camera_zoom() * camera_zoom;
-        for y in 0..100 {
-            for x in 0..100 {
-                draw_texture_ex(&tiles_sheet, x as f32 * 8.0, y as f32* 8.0, WHITE, DrawTextureParams {
-                    dest_size: Some(Vec2::new(8.0, 8.0)),
-                    source: Some(Rect::new(7.0 * 8.0, 2.0 * 8.0, 8.0, 8.0)),
-                     ..Default::default()
-                    }
-                );
+    
+        draw_texture_ex(&tiles_sheet, 0.0, 0.0, WHITE, DrawTextureParams {
+            dest_size: Some(Vec2::new(8.0, 8.0)),
+            source: Some(Rect::new(7.0 * 8.0, 2.0 * 8.0, 8.0, 8.0)),
+                ..Default::default()
             }
-        }
-        
+        );
         // Draw in screen space
         set_default_camera();
         draw_text(&get_fps().to_string(), 50.0, 50.0, 100.0, WHITE);
