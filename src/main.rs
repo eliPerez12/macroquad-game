@@ -26,7 +26,7 @@ struct Player {
     pos: Vec2,
     vel: Vec2,
     stamina: f32,
-    angle: f32,
+    angle: f32, // in radians
 }
 impl Player {
     const MAX_STAMINA: f32 = 100.0;
@@ -97,7 +97,7 @@ async fn main() {
         ..Default::default()
     };
 
-    let tiles_sheet = load_texture("assets/tiles.png").await.unwrap();
+    let _tiles_sheet = load_texture("assets/tiles.png").await.unwrap();
     let player_sprite = load_texture("assets/soldier.png").await.unwrap();
     let example_world = load_texture("assets/sample.png").await.unwrap();
 
@@ -113,15 +113,15 @@ async fn main() {
         // Update Game
         player.handle_player_movements();
         player.update_angle_to_mouse();
-        dbg!(player.angle);
 
         if is_key_down(KeyCode::Q) {
-            camera.zoom *= 1.01;
+            camera.target_zoom *= 1.01;
         }
         if is_key_down(KeyCode::E) {
-            camera.zoom /= 1.01;
+            camera.target_zoom /= 1.01;
         }
 
+        camera.set_camera_zoom();
         camera.pan_to_target(player.pos + Vec2::new(0.0, 0.0));
 
         // Draw in world space
@@ -148,6 +148,7 @@ async fn main() {
         // }
 
         // Draw player
+        draw_circle(player.pos.x + 0.50, player.pos.y + 0.50, 3.2, Color::from_rgba(0, 0, 0, 70));
 
         draw_texture_ex(&player_sprite, player.pos.x - 5.5, player.pos.y - 5.5, WHITE, DrawTextureParams {
             rotation: player.angle,
@@ -155,6 +156,8 @@ async fn main() {
             dest_size: Some(Vec2::new(11.0, 11.0)),
         ..Default::default()}
         );
+
+        
 
         // Draw in screen space
         set_default_camera();

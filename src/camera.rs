@@ -64,6 +64,11 @@ impl GameCamera {
         self.zoom = Self::default_camera_zoom()
     }
 
+    pub fn set_camera_zoom(&mut self){
+        self.zoom = Self::default_camera_zoom();
+        self.zoom *= self.target_zoom;
+    }
+
     fn default_camera_zoom() -> Vec2 {
         vec2(1.0 / screen_width(), 1.0 / screen_height())
     }
@@ -79,11 +84,11 @@ impl GameCamera {
 impl Default for GameCamera {
     fn default() -> GameCamera {
         GameCamera {
-            zoom: GameCamera::default_camera_zoom() * 5.0,
+            zoom: GameCamera::default_camera_zoom(),
             offset: vec2(0., 0.),
             target: vec2(0., 0.),
             rotation: 0.,
-            target_zoom: 1.0,
+            target_zoom: 15.0,
             render_target: None,
             viewport: None,
         }
