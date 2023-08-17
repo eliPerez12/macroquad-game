@@ -3,6 +3,7 @@ use macroquad::prelude::*;
 pub struct GameCamera {
     pub rotation: f32,
     pub zoom: Vec2,
+    pub target_zoom: f32,
     pub target: Vec2,
     pub offset: Vec2,
     pub render_target: Option<RenderTarget>,
@@ -78,10 +79,11 @@ impl GameCamera {
 impl Default for GameCamera {
     fn default() -> GameCamera {
         GameCamera {
-            zoom: GameCamera::default_camera_zoom(),
+            zoom: GameCamera::default_camera_zoom() * 5.0,
             offset: vec2(0., 0.),
             target: vec2(0., 0.),
             rotation: 0.,
+            target_zoom: 1.0,
             render_target: None,
             viewport: None,
         }
