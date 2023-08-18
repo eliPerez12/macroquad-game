@@ -14,12 +14,8 @@ pub struct GameCamera {
 
 impl GameCamera {
     pub fn handle_controls(&mut self) {
-        if is_key_down(KeyCode::Q) {
-            self.target_zoom *= 1.01;
-        }
-        if is_key_down(KeyCode::E) {
-            self.target_zoom /= 1.01;
-        }
+        self.target_zoom *= mouse_wheel().1/10.0 + 1.0;
+
         self.set_camera_zoom();
     }
 

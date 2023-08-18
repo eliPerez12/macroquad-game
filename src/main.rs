@@ -28,6 +28,15 @@ async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
     Ok(texture)
 }
 
+fn screen_center() -> Vec2 {
+    Vec2::new(screen_width()/2.0, screen_height()/2.0)
+}
+
+struct Bullet {
+    pos: Vec2,
+    vel: Vec2,
+}
+
 #[macroquad::main(conf)]
 async fn main() {
     let mut camera = GameCamera {
@@ -39,6 +48,7 @@ async fn main() {
     let example_world = load_texture("assets/sample.png").await.unwrap();
 
     let mut player = Player::new();
+    let mut bullets: Vec<Bullet> = vec![];
 
     // Main game loop
     loop {
@@ -48,6 +58,22 @@ async fn main() {
         camera.handle_controls();
         camera.pan_to_target(player.pos);
 
+        if is_mouse_button_down(MouseButton::Left) {
+            let direction_to_mouse: Vec2 = Vec2::new(mouse_position().0, mouse_position().1) - screen_center();
+            let normalized_direction = direction_to_mouse.normalize();
+            let speed = 5.0; // You can change this value to make the bullet move faster or slower
+            let velocity = normalized_direction * speed;
+        
+            bullets.push(Bullet {
+                pos: player.pos,
+                vel: velocity,
+            });
+        }
+        
+        for bullet in &mut bullets {
+            bullet.pos += bullet.vel;
+        }
+
         // Draw in world space
         set_camera(&mut camera);
         clear_background(BLACK);
@@ -55,6 +81,12 @@ async fn main() {
         // Draws example world
         draw_texture(&example_world, 0.0, 0.0, WHITE);
         player.draw(&player_sprite);
+
+        // Bullets
+
+        for bullet in &bullets {
+            draw_circle(bullet.pos.x, bullet.pos.y, 0.4, WHITE);
+        }
 
         // Draw in screen space
         set_default_camera();
@@ -86,10 +118,15 @@ async fn main() {
             filled_bar
         };
 
-        draw_rect(&filled_health_bar, Color::from_rgba(255, 30, 30, 180));
+        let stamina_bar_color = match player.stamina_state {
+            PlayerStaminaState::Normal => Color::from_rgba(60, 60, 60, 180),
+            PlayerStaminaState::Recovering => Color::from_rgba(100, 100, 100, 200)
+        };
+
+        draw_rect(&filled_health_bar, Color::from_rgba(255, 30, 30, 200));
         draw_rect_lines(&health_bar, 3.0, BLACK);
 
-        draw_rect(&filled_stamina_bar, Color::from_rgba(50, 50, 50, 180));
+        draw_rect(&filled_stamina_bar, stamina_bar_color);
         draw_rect_lines(&stamina_bar, 3.0, BLACK);
 
         next_frame().await;

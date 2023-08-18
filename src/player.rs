@@ -30,8 +30,8 @@ impl Player {
     const MAX_STAMINA: f32 = 100.0;
     const MIN_STAMINA_FOR_SPRINTING: f32 = 15.0;
 
-    const SPRINTING_VELOCITY: f32 = 0.45;
-    const WALKING_VELOCITY: f32 = 0.33;
+    const SPRINTING_VELOCITY: f32 = 0.40;
+    const WALKING_VELOCITY: f32 = 0.28;
     const PLAYER_ACC: f32 = 0.1; // Acceleration
     const PLAYER_DEACC: f32 = 0.05; // Deacceleration
 
