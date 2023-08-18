@@ -54,28 +54,7 @@ async fn main() {
 
         // Draws example world
         draw_texture(&example_world, 0.0, 0.0, WHITE);
-
-        // Draw player shadow
-        draw_circle(
-            player.pos.x + 0.50,
-            player.pos.y + 0.50,
-            3.2,
-            Color::from_rgba(0, 0, 0, 70),
-        );
-
-        // Draw player
-        draw_texture_ex(
-            &player_sprite,
-            player.pos.x - 5.5,
-            player.pos.y - 5.5,
-            WHITE,
-            DrawTextureParams {
-                rotation: player.angle,
-                pivot: Some(player.pos),
-                dest_size: Some(Vec2::new(11.0, 11.0)),
-                ..Default::default()
-            },
-        );
+        player.draw(&player_sprite);
 
         // Draw in screen space
         set_default_camera();

@@ -28,10 +28,10 @@ pub enum PlayerStaminaState {
 // Movement Logic
 impl Player {
     const MAX_STAMINA: f32 = 100.0;
-    const MIN_STAMINA_FOR_SPRINTING: f32 = 10.0;
+    const MIN_STAMINA_FOR_SPRINTING: f32 = 15.0;
 
     const SPRINTING_VELOCITY: f32 = 0.45;
-    const MOVING_VELOCITY: f32 = 0.33;
+    const WALKING_VELOCITY: f32 = 0.33;
     const PLAYER_ACC: f32 = 0.1; // Acceleration
     const PLAYER_DEACC: f32 = 0.05; // Deacceleration
 
@@ -60,9 +60,12 @@ impl Player {
     fn handle_velocity(&mut self) {
 
         // Determine max velocity based on running state
-        let player_max_vel: f32 = match self.movement_state {
-            PlayerMovementState::Sprinting => Player::SPRINTING_VELOCITY,
-            _ => Player::MOVING_VELOCITY,
+        let player_max_vel: f32 = {
+            if self.movement_state == PlayerMovementState::Sprinting && self.stamina_state == PlayerStaminaState::Normal {
+                Player::SPRINTING_VELOCITY
+            } else {
+                Player::WALKING_VELOCITY
+            }
         };
 
         // Handle movement inputs
@@ -109,9 +112,9 @@ impl Player {
         if self.movement_state == PlayerMovementState::Sprinting  && self.stamina_state == PlayerStaminaState::Normal {
             self.stamina = (self.stamina - 0.2).max(0.0);
         }
-        if !(self.movement_state == PlayerMovementState::Sprinting ) && self.stamina < Player::MAX_STAMINA {
+        else if self.stamina < Player::MAX_STAMINA {
             self.stamina = (self.stamina + 0.1).min(Player::MAX_STAMINA);
-            if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING{
+            if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
                 self.stamina_state = PlayerStaminaState::Normal;
             }
         }
@@ -162,5 +165,28 @@ impl Player {
 
 // Drawing logic
 impl Player {
-    
+
+    pub fn draw(&self, player_sprite: &Texture2D) {
+        // Draw player shadow
+        draw_circle(
+            self.pos.x + 0.50,
+            self.pos.y + 0.50,
+            3.2,
+            Color::from_rgba(0, 0, 0, 70),
+        );
+
+        // Draw player
+        draw_texture_ex(
+            &player_sprite,
+            self.pos.x - 5.5,
+            self.pos.y - 5.5,
+            WHITE,
+            DrawTextureParams {
+                rotation: self.angle,
+                pivot: Some(self.pos),
+                dest_size: Some(Vec2::new(11.0, 11.0)),
+                ..Default::default()
+            },
+        );
+    }
 }
