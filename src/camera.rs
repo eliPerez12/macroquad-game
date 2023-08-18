@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use macroquad::prelude::*;
 
 pub struct GameCamera {
@@ -8,6 +10,59 @@ pub struct GameCamera {
     pub offset: Vec2,
     pub render_target: Option<RenderTarget>,
     pub viewport: Option<(i32, i32, i32, i32)>,
+}
+
+impl GameCamera {
+    pub fn handle_controls(&mut self) {
+        if is_key_down(KeyCode::Q) {
+            self.target_zoom *= 1.01;
+        }
+        if is_key_down(KeyCode::E) {
+            self.target_zoom /= 1.01;
+        }
+        self.set_camera_zoom();
+    }
+
+    pub fn world_to_screen(&self, point: Vec2) -> Vec2 {
+        let mat = self.matrix();
+        let transform = mat.transform_point3(vec3(point.x, point.y, 0.));
+
+        vec2(
+            (transform.x / 2. + 0.5) * screen_width(),
+            (0.5 - transform.y / 2.) * screen_height(),
+        )
+    }
+
+    pub fn screen_to_world(&self, point: Vec2) -> Vec2 {
+        let point = vec2(
+            point.x / screen_width() * 2. - 1.,
+            1. - point.y / screen_height() * 2.,
+        );
+        let inv_mat = self.matrix().inverse();
+        let transform = inv_mat.transform_point3(vec3(point.x, point.y, 0.));
+
+        vec2(transform.x, transform.y)
+    }
+
+    pub fn set_default_camera_zoom(&mut self) {
+        self.zoom = Self::default_camera_zoom()
+    }
+
+    pub fn set_camera_zoom(&mut self) {
+        self.zoom = Self::default_camera_zoom();
+        self.zoom *= self.target_zoom;
+    }
+
+    fn default_camera_zoom() -> Vec2 {
+        vec2(1.0 / screen_width(), 1.0 / screen_height())
+    }
+
+    // Moves camera to target slowly
+    pub fn pan_to_target(&mut self, target: Vec2) {
+        const PAN_SPEED: f32 = 15.0; // Bigger number means slower pan
+        let camera_dist_from_player = self.target - target;
+        self.target -= camera_dist_from_player / PAN_SPEED;
+    }
 }
 
 impl Camera for GameCamera {
@@ -35,49 +90,6 @@ impl Camera for GameCamera {
 
     fn viewport(&self) -> Option<(i32, i32, i32, i32)> {
         self.viewport
-    }
-}
-
-impl GameCamera {
-    pub fn world_to_screen(&self, point: Vec2) -> Vec2 {
-        let mat = self.matrix();
-        let transform = mat.transform_point3(vec3(point.x, point.y, 0.));
-
-        vec2(
-            (transform.x / 2. + 0.5) * screen_width(),
-            (0.5 - transform.y / 2.) * screen_height(),
-        )
-    }
-
-    pub fn screen_to_world(&self, point: Vec2) -> Vec2 {
-        let point = vec2(
-            point.x / screen_width() * 2. - 1.,
-            1. - point.y / screen_height() * 2.,
-        );
-        let inv_mat = self.matrix().inverse();
-        let transform = inv_mat.transform_point3(vec3(point.x, point.y, 0.));
-
-        vec2(transform.x, transform.y)
-    }
-
-    pub fn set_default_camera_zoom(&mut self) {
-        self.zoom = Self::default_camera_zoom()
-    }
-
-    pub fn set_camera_zoom(&mut self){
-        self.zoom = Self::default_camera_zoom();
-        self.zoom *= self.target_zoom;
-    }
-
-    fn default_camera_zoom() -> Vec2 {
-        vec2(1.0 / screen_width(), 1.0 / screen_height())
-    }
-
-    // Moves camera to target slowly
-    pub fn pan_to_target(&mut self, target: Vec2) {
-        const PAN_SPEED: f32 = 15.0; // Bigger number means slower pan
-        let camera_dist_from_player = self.target - target;
-        self.target -= camera_dist_from_player / PAN_SPEED;
     }
 }
 
