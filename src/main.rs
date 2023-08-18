@@ -16,6 +16,10 @@ fn draw_rect(rect: &Rect, color: Color) {
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
 }
 
+fn draw_rect_lines(rect: &Rect, thickness: f32, color: Color) {
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, thickness, color)
+}
+
 async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
     let texture = Texture2D::from_image(&load_image(path).await?);
     texture.set_filter(FilterMode::Nearest);
@@ -28,6 +32,7 @@ struct Player {
     stamina: f32,
     angle: f32, // in radians
 }
+
 impl Player {
     const MAX_STAMINA: f32 = 100.0;
     
@@ -121,6 +126,7 @@ async fn main() {
             camera.target_zoom /= 1.01;
         }
 
+
         camera.set_camera_zoom();
         camera.pan_to_target(player.pos + Vec2::new(0.0, 0.0));
 
@@ -129,23 +135,6 @@ async fn main() {
         clear_background(BLACK);
 
         draw_texture(&example_world, 0.0, 0.0, WHITE);
-
-
-        // for y in 0..20 {
-        //     for x in 0..20 {
-        //         draw_texture_ex(
-        //             &tiles_sheet,
-        //             8.0 * x as f32,
-        //             8.0 * y as f32,
-        //             WHITE,
-        //             DrawTextureParams {
-        //                 dest_size: Some(Vec2::new(8.0, 8.0)),
-        //                 source: Some(get_src_rect(3, 1)),
-        //                 ..Default::default()
-        //             },
-        //         );
-        //     }
-        // }
 
         // Draw player
         draw_circle(player.pos.x + 0.50, player.pos.y + 0.50, 3.2, Color::from_rgba(0, 0, 0, 70));
@@ -157,11 +146,31 @@ async fn main() {
         ..Default::default()}
         );
 
-        
-
         // Draw in screen space
         set_default_camera();
         draw_text(&get_fps().to_string(), 50.0, 50.0, 100.0, WHITE);
+
+
+        let health_bar = Rect {
+            x: screen_width()/20.0,
+            y: screen_height() - screen_height()/12.0,
+            w: screen_width()/5.0,
+            h: screen_height()/80.0
+        };
+
+        // 
+        let stamina_bar = Rect {
+            x: screen_width()/20.0,
+            y: screen_height() - screen_height()/15.0,
+            w: screen_width()/5.0,
+            h: screen_height()/80.0
+        };
+
+        draw_rect(&health_bar, Color::from_rgba(255, 30, 30, 180));
+        draw_rect_lines(&health_bar, 3.0, BLACK);
+
+        draw_rect(&stamina_bar, Color::from_rgba(50, 50, 50, 180));
+        draw_rect_lines(&stamina_bar, 3.0, BLACK);
 
         next_frame().await;
     }
