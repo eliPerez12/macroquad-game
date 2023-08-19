@@ -28,10 +28,6 @@ async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
     Ok(texture)
 }
 
-fn screen_center() -> Vec2 {
-    Vec2::new(screen_width()/2.0, screen_height()/2.0)
-}
-
 struct Bullet {
     pos: Vec2,
     vel: f32,
@@ -56,7 +52,7 @@ async fn main() {
     // Main game loop
     loop {
         // Update Game
-        player.handle_player_movements();
+        player.handle_player_movements(&camera);
 
         camera.handle_controls();
         camera.pan_to_target(player.pos);
@@ -67,7 +63,7 @@ async fn main() {
                 let bullet_speed = 5.0 + rand::gen_range(-bullet_spread, bullet_spread); // Apply speed spread
 
                 let mouse_pos: Vec2 = mouse_position().into();
-                let mouse_dist_center = mouse_pos - screen_center();
+                let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
                 let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
                 let angle = angle + rand::gen_range(-bullet_spread, bullet_spread); // Apply angular spread
             

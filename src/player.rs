@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use crate::camera::GameCamera;
 
 pub struct Player {
     pub pos: Vec2,
@@ -48,13 +49,13 @@ impl Player {
     }
 
     // Function to handle player movements
-    pub fn handle_player_movements(&mut self) {
+    pub fn handle_player_movements(&mut self, camera: &GameCamera) {
         self.handle_movement_state();
         self.handle_velocity();
         self.handle_stamina();
         self.apply_velocity();
 
-        self.update_angle_to_mouse();
+        self.update_angle_to_mouse(camera);
     }
 
     fn handle_velocity(&mut self) {
@@ -136,9 +137,9 @@ impl Player {
     }
 
     // Function to update the player's angle towards the mouse position
-    pub fn update_angle_to_mouse(&mut self) {
+    pub fn update_angle_to_mouse(&mut self, camera: &GameCamera) {
         let mouse_pos: Vec2 = mouse_position().into();
-        let screen_center = Vec2::new(screen_width() / 2.0, screen_height() / 2.0);
+        let screen_center = camera.world_to_screen(self.pos);
         let mouse_dist_center = mouse_pos - screen_center;
         self.angle = f32::atan2(-mouse_dist_center.x, mouse_dist_center.y);
     }
