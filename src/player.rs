@@ -110,10 +110,10 @@ impl Player {
             self.stamina_state = PlayerStaminaState::Recovering
         }
         if self.movement_state == PlayerMovementState::Sprinting  && self.stamina_state == PlayerStaminaState::Normal {
-            self.stamina = (self.stamina - 0.2).max(0.0);
+            self.stamina = (self.stamina - 0.2 * get_frame_time() * 60.0).max(0.0);
         }
         else if self.stamina < Player::MAX_STAMINA {
-            self.stamina = (self.stamina + 0.1).min(Player::MAX_STAMINA);
+            self.stamina = (self.stamina + 0.1 * get_frame_time() * 60.0).min(Player::MAX_STAMINA);
             if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
                 self.stamina_state = PlayerStaminaState::Normal;
             }
@@ -132,7 +132,7 @@ impl Player {
     }
 
     fn apply_velocity(&mut self) {
-        self.pos += self.vel;
+        self.pos += self.vel * get_frame_time() * 60.0;
     }
 
     // Function to update the player's angle towards the mouse position
@@ -166,7 +166,7 @@ impl Player {
 // Drawing logic
 impl Player {
 
-    pub fn draw(&self, player_sprite: &Texture2D) {
+    pub fn draw(&self, player_sprite: &Texture2D, player2_sprite: &Texture2D) {
         // Draw player shadow
         draw_circle(
             self.pos.x + 0.50,
@@ -175,16 +175,21 @@ impl Player {
             Color::from_rgba(0, 0, 0, 70),
         );
 
+        let player_texture = match is_mouse_button_down(MouseButton::Right) {
+            true => player_sprite,
+            false => player2_sprite,
+        };
+
         // Draw player
         draw_texture_ex(
-            &player_sprite,
-            self.pos.x - 5.5,
-            self.pos.y - 5.5,
+            &player_texture,
+            self.pos.x - 17.0/2.0 - 0.25,
+            self.pos.y - 17.0/2.0 + 0.5,
             WHITE,
             DrawTextureParams {
                 rotation: self.angle,
                 pivot: Some(self.pos),
-                dest_size: Some(Vec2::new(11.0, 11.0)),
+                dest_size: Some(Vec2::new(17.0, 17.0)),
                 ..Default::default()
             },
         );

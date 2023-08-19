@@ -5,7 +5,7 @@ use player::*;
 mod camera;
 mod player;
 
-fn get_src_rect(atlas_grid_x: i32, atlas_grid_y: i32) -> Rect {
+fn _get_src_rect(atlas_grid_x: i32, atlas_grid_y: i32) -> Rect {
     Rect {
         x: atlas_grid_x as f32 * 8.0,
         y: atlas_grid_y as f32 * 8.0,
@@ -34,7 +34,9 @@ fn screen_center() -> Vec2 {
 
 struct Bullet {
     pos: Vec2,
-    vel: Vec2,
+    vel: f32,
+    angle: f32,
+    hit_something: bool
 }
 
 #[macroquad::main(conf)]
@@ -45,6 +47,7 @@ async fn main() {
 
     let _tiles_sheet = load_texture("assets/tiles.png").await.unwrap();
     let player_sprite = load_texture("assets/soldier.png").await.unwrap();
+    let player2_sprite = load_texture("assets/soldier2.png").await.unwrap();
     let example_world = load_texture("assets/sample.png").await.unwrap();
 
     let mut player = Player::new();
@@ -58,34 +61,58 @@ async fn main() {
         camera.handle_controls();
         camera.pan_to_target(player.pos);
 
-        if is_mouse_button_down(MouseButton::Left) {
-            let direction_to_mouse: Vec2 = Vec2::new(mouse_position().0, mouse_position().1) - screen_center();
-            let normalized_direction = direction_to_mouse.normalize();
-            let speed = 5.0; // You can change this value to make the bullet move faster or slower
-            let velocity = normalized_direction * speed;
-        
-            bullets.push(Bullet {
-                pos: player.pos,
-                vel: velocity,
-            });
+        if is_mouse_button_pressed(MouseButton::Left) && is_mouse_button_down(MouseButton::Right) {
+            for _ in 0..8 {
+                let bullet_spread = 0.15;
+                let bullet_speed = 5.0 + rand::gen_range(-bullet_spread, bullet_spread); // Apply speed spread
+
+                let mouse_pos: Vec2 = mouse_position().into();
+                let mouse_dist_center = mouse_pos - screen_center();
+                let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
+                let angle = angle + rand::gen_range(-bullet_spread, bullet_spread); // Apply angular spread
+            
+                bullets.push(Bullet {
+                    pos: player.pos,
+                    vel: bullet_speed,
+                    hit_something: false,
+                    angle
+                });
+            }
         }
         
         for bullet in &mut bullets {
-            bullet.pos += bullet.vel;
+            let drag = 0.1;
+            if bullet.vel >= 0.0 {
+                bullet.vel -= drag;
+                bullet.vel = bullet.vel.max(0.0);
+            } else {
+                bullet.vel += drag;
+                bullet.vel = bullet.vel.min(0.0);
+            }
+            bullet.pos += Vec2::new(
+                f32::sin(bullet.angle) * bullet.vel,
+                f32::cos(bullet.angle) * bullet.vel
+            ) * get_frame_time() * 60.0;
+        
+            if bullet.vel.abs() < 1.0 {
+                bullet.hit_something = true
+            }
         }
-
+        
+        bullets.retain(|bullet| !bullet.hit_something);
+        
         // Draw in world space
         set_camera(&mut camera);
         clear_background(BLACK);
 
         // Draws example world
         draw_texture(&example_world, 0.0, 0.0, WHITE);
-        player.draw(&player_sprite);
+        player.draw(&player_sprite, &player2_sprite);
 
         // Bullets
 
         for bullet in &bullets {
-            draw_circle(bullet.pos.x, bullet.pos.y, 0.4, WHITE);
+            draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
         }
 
         // Draw in screen space
