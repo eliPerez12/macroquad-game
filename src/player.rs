@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::camera::GameCamera;
+use crate::{camera::GameCamera, Assets};
 
 pub struct Player {
     pub pos: Vec2,
@@ -167,7 +167,7 @@ impl Player {
 
 // Drawing logic
 impl Player {
-    pub fn draw(&self, player_sprite: &Texture2D, player2_sprite: &Texture2D, backpack_sprite: &Texture2D) {
+    pub fn draw(&self, assets: &Assets) {
 
         const CENTER_OFFSET: f32 = 1.0/6.0;
 
@@ -180,8 +180,8 @@ impl Player {
         );
 
         let player_texture = match self.is_aiming() {
-            true => player_sprite,
-            false => player2_sprite,
+            true => assets.get_texture("blue_soldier.png"),
+            false => assets.get_texture("blue_soldier2.png"),
         };
 
         // Draw player
@@ -200,7 +200,7 @@ impl Player {
 
         // Draw backpack
         draw_texture_ex(
-            &backpack_sprite,
+            assets.get_texture("backpack.png"),
             self.pos.x - 17.0/2.0 + CENTER_OFFSET,
             self.pos.y - 17.0/2.0 - CENTER_OFFSET,
             WHITE,

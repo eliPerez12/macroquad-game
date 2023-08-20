@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 use camera::*;
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use player::*;
 
 mod camera;
@@ -14,12 +14,6 @@ fn draw_rect_lines(rect: &Rect, thickness: f32, color: Color) {
     draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, thickness, color)
 }
 
-async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
-    let texture = Texture2D::from_image(&load_image(path).await?);
-    texture.set_filter(FilterMode::Nearest);
-    Ok(texture)
-}
-
 struct Bullet {
     pos: Vec2,
     vel: f32,
@@ -27,17 +21,54 @@ struct Bullet {
     hit_something: bool
 }
 
+pub struct Assets {
+    textures: HashMap<String, Texture2D>,
+}
+
+impl Assets {
+    fn get_texture(&self, texture: &str) -> &Texture2D{
+        self.textures.get(texture).unwrap()
+    }
+
+    async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
+        let texture = Texture2D::from_image(&load_image(path).await?);
+        texture.set_filter(FilterMode::Nearest);
+        Ok(texture)
+    }
+
+    // Stack based search through assets folder, and loads in all assets
+    async fn load_all_assets() -> Self {
+        let mut textures: HashMap<String, Texture2D> = HashMap::new();
+        let mut dirs_to_explore = vec![std::path::PathBuf::from("assets")];
+    
+        while let Some(dir) = dirs_to_explore.pop() {
+            for entry in std::fs::read_dir(dir).unwrap(){
+                let entry = entry.unwrap();
+                let path = entry.path();
+                if path.is_dir() && path.to_str().unwrap() != "temp"{
+                    dirs_to_explore.push(path);
+                } else if path.is_file() {
+                    let path_str = path.to_string_lossy().to_string();
+                    if path_str.ends_with(".png") {
+                        let key_path_str = path_str.split("/").last().unwrap();
+                        textures.insert(key_path_str.to_string(), Assets::load_texture(&path_str).await.unwrap());
+                    }
+                }
+            }
+        }
+        Assets { textures }
+    }
+}
+
+
 #[macroquad::main(conf)]
 async fn main() {
     let mut camera = GameCamera {
         ..Default::default()
     };
-
-    let _tiles_sheet = load_texture("assets/temp/tiles.png").await.unwrap();
-    let player_sprite = load_texture("assets/player/_dark_soldier.png").await.unwrap();
-    let player2_sprite = load_texture("assets/player/_dark_soldier2.png").await.unwrap();
-    let backpack_sprite = load_texture("assets/backpacks/backpack.png").await.unwrap();
-    let example_world = load_texture("assets/sample.png").await.unwrap();
+    
+    let assets = Assets::load_all_assets().await;
+    let example_world = Assets::load_texture("assets/sample.png").await.unwrap();
 
     let mut player = Player::new();
     let mut bullets: Vec<Bullet> = vec![];
@@ -50,7 +81,7 @@ async fn main() {
         camera.handle_controls();
         camera.pan_to_target(player.pos);
 
-        if is_mouse_button_pressed(MouseButton::Left) && is_mouse_button_down(MouseButton::Right) {
+        if (is_mouse_button_pressed(MouseButton::Left) | is_key_pressed(KeyCode::Space)) && is_mouse_button_down(MouseButton::Right) {
             for _ in 0..8 {
                 let bullet_spread = 0.15;
                 let bullet_speed = 5.3 + rand::gen_range(-bullet_spread, bullet_spread); // Apply speed spread
@@ -96,7 +127,7 @@ async fn main() {
 
         // Draws example world
         draw_texture(&example_world, 0.0, 0.0, WHITE);
-        player.draw(&player_sprite, &player2_sprite, &backpack_sprite);
+        player.draw(&assets);
 
         // Bullets
         for bullet in &bullets {
