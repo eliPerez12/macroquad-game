@@ -33,9 +33,10 @@ async fn main() {
         ..Default::default()
     };
 
-    let _tiles_sheet = load_texture("assets/tiles.png").await.unwrap();
-    let player_sprite = load_texture("assets/soldier.png").await.unwrap();
-    let player2_sprite = load_texture("assets/soldier2.png").await.unwrap();
+    let _tiles_sheet = load_texture("assets/temp/tiles.png").await.unwrap();
+    let player_sprite = load_texture("assets/player/_dark_soldier.png").await.unwrap();
+    let player2_sprite = load_texture("assets/player/_dark_soldier2.png").await.unwrap();
+    let backpack_sprite = load_texture("assets/backpacks/backpack.png").await.unwrap();
     let example_world = load_texture("assets/sample.png").await.unwrap();
 
     let mut player = Player::new();
@@ -95,7 +96,7 @@ async fn main() {
 
         // Draws example world
         draw_texture(&example_world, 0.0, 0.0, WHITE);
-        player.draw(&player_sprite, &player2_sprite);
+        player.draw(&player_sprite, &player2_sprite, &backpack_sprite);
 
         // Bullets
         for bullet in &bullets {

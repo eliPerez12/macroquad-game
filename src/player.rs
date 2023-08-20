@@ -6,8 +6,8 @@ pub struct Player {
     pub vel: Vec2,
     pub health: f32,
     pub stamina: f32,
-    pub stamina_state: PlayerStaminaState,
     pub movement_state: PlayerMovementState,
+    pub stamina_state: PlayerStaminaState,
     pub angle: f32,
 }
 
@@ -23,8 +23,6 @@ pub enum PlayerStaminaState {
     Normal,
     Recovering,
 }
-
-// Impls!
 
 // Movement Logic
 impl Player {
@@ -169,7 +167,7 @@ impl Player {
 
 // Drawing logic
 impl Player {
-    pub fn draw(&self, player_sprite: &Texture2D, player2_sprite: &Texture2D) {
+    pub fn draw(&self, player_sprite: &Texture2D, player2_sprite: &Texture2D, backpack_sprite: &Texture2D) {
 
         const CENTER_OFFSET: f32 = 1.0/6.0;
 
@@ -200,5 +198,18 @@ impl Player {
             },
         );
 
+        // Draw backpack
+        draw_texture_ex(
+            &backpack_sprite,
+            self.pos.x - 17.0/2.0 + CENTER_OFFSET,
+            self.pos.y - 17.0/2.0 - CENTER_OFFSET,
+            WHITE,
+            DrawTextureParams {
+                rotation: self.angle, // Correction to make the gun face the mouse more accruate
+                pivot: Some(self.pos),
+                dest_size: Some(Vec2::new(17.0, 17.0)),
+                ..Default::default()
+            },
+        );
     }
 }
