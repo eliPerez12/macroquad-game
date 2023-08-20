@@ -59,7 +59,6 @@ impl Player {
     }
 
     fn handle_velocity(&mut self) {
-
         // Determine max velocity based on running state
         let player_max_vel: f32 = {
             if self.movement_state == PlayerMovementState::Sprinting && self.stamina_state == PlayerStaminaState::Normal {
@@ -113,7 +112,7 @@ impl Player {
         if self.movement_state == PlayerMovementState::Sprinting  && self.stamina_state == PlayerStaminaState::Normal {
             self.stamina = (self.stamina - 0.2 * get_frame_time() * 60.0).max(0.0);
         }
-        else if self.stamina < Player::MAX_STAMINA {
+        else if self.stamina < Player::MAX_STAMINA && !self.is_aiming() {
             self.stamina = (self.stamina + 0.1 * get_frame_time() * 60.0).min(Player::MAX_STAMINA);
             if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
                 self.stamina_state = PlayerStaminaState::Normal;
@@ -160,23 +159,29 @@ impl Player {
         } 
         false
     }
+
+    fn is_aiming(&self) -> bool {
+        is_mouse_button_down(MouseButton::Right)
+    }
 }
 
 
 
 // Drawing logic
 impl Player {
-
     pub fn draw(&self, player_sprite: &Texture2D, player2_sprite: &Texture2D) {
+
+        const CENTER_OFFSET: f32 = 1.0/6.0;
+
         // Draw player shadow
         draw_circle(
-            self.pos.x + 0.50,
-            self.pos.y + 0.50,
+            self.pos.x + CENTER_OFFSET + 0.3,
+            self.pos.y - CENTER_OFFSET + 0.3,
             3.2,
             Color::from_rgba(0, 0, 0, 70),
         );
 
-        let player_texture = match is_mouse_button_down(MouseButton::Right) {
+        let player_texture = match self.is_aiming() {
             true => player_sprite,
             false => player2_sprite,
         };
@@ -184,15 +189,16 @@ impl Player {
         // Draw player
         draw_texture_ex(
             &player_texture,
-            self.pos.x - 17.0/2.0 - 0.25,
-            self.pos.y - 17.0/2.0 + 0.5,
+            self.pos.x - 17.0/2.0 + CENTER_OFFSET,
+            self.pos.y - 17.0/2.0 - CENTER_OFFSET,
             WHITE,
             DrawTextureParams {
-                rotation: self.angle,
+                rotation: self.angle, // Correction to make the gun face the mouse more accruate
                 pivot: Some(self.pos),
                 dest_size: Some(Vec2::new(17.0, 17.0)),
                 ..Default::default()
             },
         );
+
     }
 }

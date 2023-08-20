@@ -1,18 +1,10 @@
-use camera::*;
 use macroquad::prelude::*;
+use camera::*;
+// use std::collections::HashMap;
 use player::*;
 
 mod camera;
 mod player;
-
-fn _get_src_rect(atlas_grid_x: i32, atlas_grid_y: i32) -> Rect {
-    Rect {
-        x: atlas_grid_x as f32 * 8.0,
-        y: atlas_grid_y as f32 * 8.0,
-        w: 8.0,
-        h: 8.0,
-    }
-}
 
 fn draw_rect(rect: &Rect, color: Color) {
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
@@ -60,7 +52,7 @@ async fn main() {
         if is_mouse_button_pressed(MouseButton::Left) && is_mouse_button_down(MouseButton::Right) {
             for _ in 0..8 {
                 let bullet_spread = 0.15;
-                let bullet_speed = 5.0 + rand::gen_range(-bullet_spread, bullet_spread); // Apply speed spread
+                let bullet_speed = 5.3 + rand::gen_range(-bullet_spread, bullet_spread); // Apply speed spread
 
                 let mouse_pos: Vec2 = mouse_position().into();
                 let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
@@ -106,7 +98,6 @@ async fn main() {
         player.draw(&player_sprite, &player2_sprite);
 
         // Bullets
-
         for bullet in &bullets {
             draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
         }
