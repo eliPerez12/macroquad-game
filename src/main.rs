@@ -68,7 +68,7 @@ async fn main() {
     };
     
     let assets = Assets::load_all_assets().await;
-    let example_world = Assets::load_texture("assets/sample.png").await.unwrap();
+    let example_world = Assets::load_texture("assets/temp/sample.png").await.unwrap();
 
     let mut player = Player::new();
     let mut bullets: Vec<Bullet> = vec![];
