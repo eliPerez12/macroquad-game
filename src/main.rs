@@ -13,7 +13,7 @@ struct Bullet {
     pos: Vec2,
     vel: f32,
     angle: f32,
-    hit_something: bool
+    hit_something: bool,
 }
 
 #[macroquad::main(conf)]
@@ -24,14 +24,23 @@ async fn main() {
     let example_world = assets.get_texture("sample.png");
 
     let mut player = Player::new();
+    player.pos = Vec2::new(60.0, 50.0);
     let mut bullets: Vec<Bullet> = vec![];
+
+    let mut camera_state = true;
 
     // Main game loop
     loop {
+
+        if is_key_pressed(KeyCode::P) {
+            camera_state = !camera_state;
+        }
+
         // Update Game
         player.handle_player_movements(&camera);
         camera.handle_controls();
-        camera.pan_to_target(player.pos);
+        camera.pan_to_target(if camera_state {player.pos} else {Vec2::ZERO});
+
 
         if (is_mouse_button_pressed(MouseButton::Left) | is_key_pressed(KeyCode::Space)) && is_mouse_button_down(MouseButton::Right) {
             for _ in 0..8 {
@@ -47,7 +56,7 @@ async fn main() {
                     pos: player.pos,
                     vel: bullet_speed,
                     hit_something: false,
-                    angle
+                    angle,
                 });
             }
         }

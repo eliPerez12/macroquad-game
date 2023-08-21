@@ -52,7 +52,6 @@ impl Player {
         self.handle_velocity();
         self.handle_stamina();
         self.apply_velocity();
-
         self.update_angle_to_mouse(camera);
     }
 
