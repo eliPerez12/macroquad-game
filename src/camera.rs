@@ -13,6 +13,12 @@ pub struct GameCamera {
 }
 
 impl GameCamera {
+    pub fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+
     pub fn handle_controls(&mut self) {
         self.target_zoom *= mouse_wheel().1/10.0 + 1.0;
 

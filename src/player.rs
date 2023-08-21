@@ -180,8 +180,8 @@ impl Player {
         );
 
         let player_texture = match self.is_aiming() {
-            true => assets.get_texture("blue_soldier.png"),
-            false => assets.get_texture("blue_soldier2.png"),
+            true => assets.get_texture("dark_soldier.png"),
+            false => assets.get_texture("dark_soldier2.png"),
         };
 
         // Draw player

@@ -1,18 +1,13 @@
 use macroquad::prelude::*;
 use camera::*;
-use std::collections::HashMap;
-use player::*;
+use assets::Assets;
+use player::Player;
+use ui::render_ui;
 
 mod camera;
 mod player;
-
-fn draw_rect(rect: &Rect, color: Color) {
-    draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
-}
-
-fn draw_rect_lines(rect: &Rect, thickness: f32, color: Color) {
-    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, thickness, color)
-}
+mod assets;
+mod ui;
 
 struct Bullet {
     pos: Vec2,
@@ -21,54 +16,12 @@ struct Bullet {
     hit_something: bool
 }
 
-pub struct Assets {
-    textures: HashMap<String, Texture2D>,
-}
-
-impl Assets {
-    fn get_texture(&self, texture: &str) -> &Texture2D{
-        self.textures.get(texture).unwrap()
-    }
-
-    async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
-        let texture = Texture2D::from_image(&load_image(path).await?);
-        texture.set_filter(FilterMode::Nearest);
-        Ok(texture)
-    }
-
-    // Stack based search through assets folder, and loads in all assets
-    async fn load_all_assets() -> Self {
-        let mut textures: HashMap<String, Texture2D> = HashMap::new();
-        let mut dirs_to_explore = vec![std::path::PathBuf::from("assets")];
-    
-        while let Some(dir) = dirs_to_explore.pop() {
-            for entry in std::fs::read_dir(dir).unwrap(){
-                let entry = entry.unwrap();
-                let path = entry.path();
-                if path.is_dir() && path.to_str().unwrap() != "temp"{
-                    dirs_to_explore.push(path);
-                } else if path.is_file() {
-                    let path_str = path.to_string_lossy().to_string();
-                    if path_str.ends_with(".png") {
-                        let key_path_str = path_str.split("/").last().unwrap();
-                        textures.insert(key_path_str.to_string(), Assets::load_texture(&path_str).await.unwrap());
-                    }
-                }
-            }
-        }
-        Assets { textures }
-    }
-}
-
-
 #[macroquad::main(conf)]
 async fn main() {
-    let mut camera = GameCamera {
-        ..Default::default()
-    };
+    let mut camera = GameCamera::new();
     
     let assets = Assets::load_all_assets().await;
-    let example_world = Assets::load_texture("assets/temp/sample.png").await.unwrap();
+    let example_world = assets.get_texture("sample.png");
 
     let mut player = Player::new();
     let mut bullets: Vec<Bullet> = vec![];
@@ -77,7 +30,6 @@ async fn main() {
     loop {
         // Update Game
         player.handle_player_movements(&camera);
-
         camera.handle_controls();
         camera.pan_to_target(player.pos);
 
@@ -138,42 +90,8 @@ async fn main() {
         set_default_camera();
         draw_text(&get_fps().to_string(), 50.0, 50.0, 100.0, WHITE);
 
-        let health_bar = Rect {
-            x: screen_width() / 20.0,
-            y: screen_height() - screen_height() / 11.0,
-            w: screen_width() / 5.0,
-            h: screen_height() / 50.0,
-        };
-
-        let stamina_bar = Rect {
-            x: screen_width() / 20.0,
-            y: screen_height() - screen_height() / 15.0,
-            w: screen_width() / 5.0,
-            h: screen_height() / 80.0,
-        };
-
-        let filled_health_bar = {
-            let mut filled_bar = health_bar.clone();
-            filled_bar.w = player.health * filled_bar.w / 100.0;
-            filled_bar
-        };
-
-        let filled_stamina_bar = {
-            let mut filled_bar = stamina_bar.clone();
-            filled_bar.w = player.stamina * filled_bar.w / 100.0;
-            filled_bar
-        };
-
-        let stamina_bar_color = match player.stamina_state {
-            PlayerStaminaState::Normal => Color::from_rgba(60, 60, 60, 180),
-            PlayerStaminaState::Recovering => Color::from_rgba(100, 100, 100, 200)
-        };
-
-        draw_rect(&filled_health_bar, Color::from_rgba(255, 30, 30, 200));
-        draw_rect_lines(&health_bar, 3.0, BLACK);
-
-        draw_rect(&filled_stamina_bar, stamina_bar_color);
-        draw_rect_lines(&stamina_bar, 3.0, BLACK);
+        // Rendering UI
+        render_ui(&player);
 
         next_frame().await;
     }
