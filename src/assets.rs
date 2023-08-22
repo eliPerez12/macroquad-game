@@ -38,4 +38,8 @@ impl Assets {
         }
         Assets { textures }
     }
+
+    pub async fn new() -> Self {
+        Self::load_all_assets().await
+    }
 }

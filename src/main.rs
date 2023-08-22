@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, audio::*};
 use camera::*;
 use assets::Assets;
 use player::Player;
@@ -20,13 +20,13 @@ struct Bullet {
 async fn main() {
     let mut camera = GameCamera::new();
     
-    let assets = Assets::load_all_assets().await;
+    let assets = Assets::new().await;
     let example_world = assets.get_texture("sample.png");
 
     let mut player = Player::new();
     player.pos = Vec2::new(60.0, 50.0);
     let mut bullets: Vec<Bullet> = vec![];
-
+    let shotgun_sound = load_sound("assets/sounds/shotgun3.wav").await.unwrap();
     let mut camera_state = true;
 
     // Main game loop
@@ -59,6 +59,7 @@ async fn main() {
                     angle,
                 });
             }
+            play_sound(&shotgun_sound, PlaySoundParams { looped: false, volume: 0.4 });
         }
         
         for bullet in &mut bullets {
