@@ -160,8 +160,37 @@ impl Player {
     fn is_aiming(&self) -> bool {
         is_mouse_button_down(MouseButton::Right)
     }
-}
 
+    pub fn is_in_view(&self, pos: Vec2) -> i32 {
+        // Determine the player's facing direction 
+        let player_direction = Vec2::new(-f32::sin(self.angle), f32::cos(self.angle));
+
+        // Define the field of view parameters
+        let small_fov_angle = std::f32::consts::PI / 2.25;
+        let wide_fov_angle = std::f32::consts::PI / 2.5;
+        let very_wide_fov_angle = std::f32::consts::PI / 2.8;
+
+        let fov_distance = 20.0 * 8.0; // 10 tiles
+
+        // Draw shadows
+        let direction_to_tile = (pos - self.pos).normalize();
+        let distance_to_tile = (pos - self.pos).length();
+
+        // Calculate the angle between the player's direction and the direction to the tile
+        let dot_product = direction_to_tile.dot(player_direction);
+        let angle = f32::acos(dot_product);
+
+        if angle > small_fov_angle || distance_to_tile > fov_distance {
+            0
+        } else if angle > wide_fov_angle || distance_to_tile > fov_distance {
+            1
+        } else if angle > very_wide_fov_angle || distance_to_tile > fov_distance {
+            2
+        } else {
+            3
+        }
+    }
+}
 
 
 // Drawing logic
