@@ -1,4 +1,5 @@
-use macroquad::{prelude::*, audio::*};
+use macroquad::{prelude::*, audio::*, miniquad::conf::Icon};
+use std::collections::HashMap;
 use camera::*;
 use assets::Assets;
 use player::Player;
@@ -14,10 +15,18 @@ struct Dummy {
     angle: f32,
 }
 
-impl Dummy {
-    pub fn draw(&self, assets: &Assets, player: &Player) {
+trait DrawableEntity {
+    fn draw(&self, assets: &Assets, player: &Player);
+    fn get_pos(&self) -> Vec2;
+}
+
+impl DrawableEntity for Dummy {
+    fn get_pos(&self) -> Vec2 {
+        self.pos
+    }
+    
+    fn draw(&self, assets: &Assets, player: &Player) {
         let is_in_view = player.is_in_view(self.pos);
-        dbg!(player.is_in_view(self.pos));
         if is_in_view == 0 { return };
         const CENTER_OFFSET: f32 = 1.0/6.0;
         // Draw player shadow
@@ -52,13 +61,20 @@ impl Dummy {
     }
 }
 
+impl Dummy {
+    fn turn_to_face(&mut self, camera: &GameCamera, pos: Vec2) {
+        let screen_center = camera.world_to_screen(self.pos);
+        let dist_center = pos - screen_center;
+        self.angle = f32::atan2(-dist_center.x, dist_center.y);
+    }
+}
+
 struct Bullet {
     pos: Vec2,
     vel: f32,
     angle: f32,
     hit_something: bool,
 }
-
 
 #[macroquad::main(conf)]
 async fn main() {
@@ -67,10 +83,13 @@ async fn main() {
     let assets = Assets::new().await;
     let example_world = assets.get_texture("sample.png");
 
+    let mut entities: HashMap<u32, Box<dyn DrawableEntity>> = HashMap::new();
+
+    entities.insert(0, Box::new(Dummy {pos: vec2(100.0, 100.0), angle: 0.0}));
+
     let mut player = Player::new();
     player.pos = Vec2::new(60.0, 50.0);
 
-    let dummy1 = Dummy {pos: vec2(100.0, 100.0), angle: 0.0};
     let mut bullets: Vec<Bullet> = vec![];
     let mut camera_state = true;
 
@@ -85,7 +104,6 @@ async fn main() {
         player.handle_player_movements(&camera);
         camera.handle_controls();
         camera.pan_to_target(if camera_state {player.pos} else {Vec2::ZERO});
-
 
         if (is_mouse_button_pressed(MouseButton::Left) | is_key_pressed(KeyCode::Space)) && is_mouse_button_down(MouseButton::Right) {
             for _ in 0..8 {
@@ -135,28 +153,28 @@ async fn main() {
         // Draws example world
         draw_texture(&example_world, 0.0, 0.0, WHITE);
 
-        // Draw player and dummys
-        player.draw(&assets);
-        dummy1.draw(&assets, &player);
+        // Draw entities
+        for (_entity_id, entity) in &entities {
+            entity.draw(&assets, &player)
+        }
 
-        // Draw shadows
+        // Draw shawdows
         for y in 0..40 {
             for x in 0..40 {
                 let tile_pos = Vec2::new(x as f32 * 8.0 + 4.0, y as f32 * 8.0 + 4.0);
-
-                // Draw shadow if tile is outside the player's field of view
-                if player.is_in_view(tile_pos) == 0{
-                    draw_rectangle(x as f32 * 8.0, y as f32 * 8.0, 8.0, 8.0, Color::from_rgba(0, 0, 0, 50));
-                }
-                else if player.is_in_view(tile_pos) == 1 {
-                    draw_rectangle(x as f32 * 8.0, y as f32 * 8.0, 8.0, 8.0, Color::from_rgba(0, 0, 0, 35));
-                }
-                else if player.is_in_view(tile_pos) == 2 {
-                    draw_rectangle(x as f32 * 8.0, y as f32 * 8.0, 8.0, 8.0, Color::from_rgba(0, 0, 0, 25));
-                }
+                let alpha = match player.is_in_view(tile_pos) {
+                    0 => 50,
+                    1 => 35,
+                    2 => 25,
+                    _ => continue,
+                };
+                draw_rectangle(x as f32 * 8.0, y as f32 * 8.0, 8.0, 8.0, Color::from_rgba(0, 0, 0, alpha));
             }
         }
+        
 
+        // Draw player
+        player.draw(&assets);
 
         // Bullets
         for bullet in &bullets {
@@ -180,6 +198,11 @@ fn conf() -> Conf {
         window_width: 1260,
         window_height: 768,
         fullscreen: false,
+        icon: Some(Icon {
+            small: [0;1024],
+            medium: [0;4096],
+            big: [0;16384],
+        }),
         ..Default::default()
     }
 }
