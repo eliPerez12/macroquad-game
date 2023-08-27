@@ -1,4 +1,5 @@
 use macroquad::{prelude::*, audio::*, miniquad::conf::Icon};
+use std::collections::HashSet;
 use camera::*;
 use assets::Assets;
 use player::Player;
@@ -6,12 +7,18 @@ use entities::*;
 use ui::render_ui;
 use utils::is_windows;
 
+mod maps;
 mod camera;
 mod player;
 mod assets;
 mod entities;
 mod utils;
 mod ui;
+
+fn find_tiles(origin: Vec2, angle: f32, length: f32) {
+    let mut tiles: HashSet<(u16, u16)> = HashSet::new();
+
+}
 
 fn draw_shadows(player: &Player) {
         // Draw shawdows
@@ -74,29 +81,10 @@ fn handle_shooting(bullets: &mut Vec<Bullet>, assets: &Assets, player: &Player, 
     bullets.retain(|bullet| !bullet.hit_something);
 }
 
-struct TileMap {
+pub struct TileMap {
     data: Vec<u8>,
     width: u16,
     height: u16,
-}
-
-fn example_world() -> TileMap {
-    TileMap {
-        width: 10,
-        height: 10,
-        data: vec![
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-            4,4,4,4,4,4,4,4,4,4,
-        ]
-    }
 }
 
 fn draw_world(tiles: &TileMap, assets: &Assets) {
@@ -104,16 +92,15 @@ fn draw_world(tiles: &TileMap, assets: &Assets) {
         let fit_offset = 0.0675;
         let grid_x = (tiles_index as u16 % tiles.width) as f32;
         let grid_y = (tiles_index as u16 / tiles.width) as f32;
-        draw_rectangle(grid_x * 8.0, grid_y * 8.0, 8.0, 8.0, RED);
         draw_texture_ex(
-            assets.get_texture("dbg.png"),
+            assets.get_texture("tiles.png"),
             grid_x * 8.0,
             grid_y * 8.0,
             WHITE, // Make into shadow render later
             DrawTextureParams {
                 source: Some(Rect::new(
-                    (tile % 3) as f32 * 8.0 + fit_offset/2.0,
-                    (tile / 3) as f32 * 8.0 + fit_offset/2.0,
+                    ((tile - 1) % 8) as f32 * 8.0 + fit_offset/2.0,
+                    ((tile - 1) / 8) as f32 * 8.0 + fit_offset/2.0,
                     8.0 - fit_offset,
                     8.0 - fit_offset)
                 ),
@@ -129,7 +116,8 @@ async fn main() {
     let mut camera = GameCamera::new();
     
     let assets = Assets::new().await;
-    let example_world = example_world();
+    
+    let world = maps::example_world();
 
     let mut dummy = Dummy { pos: vec2(2.2 * 8.0, 9.3 * 8.0), angle: 0.0 };
 
@@ -137,33 +125,25 @@ async fn main() {
     player.pos = Vec2::new(60.0, 50.0);
 
     let mut bullets: Vec<Bullet> = vec![];
-    let mut camera_state = true;
-
-
     // Main game loop
     loop {
-
-        if is_key_pressed(KeyCode::P) {
-            camera_state = !camera_state;
-        }
-
         // Update Game
         player.handle_player_movements(&camera);
         handle_shooting(&mut bullets, &assets, &player, &camera);
         dummy.turn_to_face(&camera, player.pos);
         camera.handle_controls();
-        camera.pan_to_target(if camera_state {player.pos} else {Vec2::ZERO});
+        camera.pan_to_target(player.pos);
         
         // Draw in world space
         set_camera(&mut camera);
         clear_background(BLACK);
 
         // Draws example world
-        draw_world(&example_world, &assets);
-        
+        draw_world(&world, &assets);
+
         // Draw dummy
         dummy.draw(&assets, &player);
-        draw_shadows(&player);
+
         // Draw player
         player.draw(&assets);
 

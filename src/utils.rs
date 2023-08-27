@@ -7,4 +7,3 @@ pub fn is_windows() -> bool { true }
 
 #[cfg(target_os = "linux")]
 pub fn is_windows() -> bool { false }
-
