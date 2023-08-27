@@ -4,6 +4,7 @@ use assets::Assets;
 use player::Player;
 use entities::*;
 use ui::render_ui;
+use utils::is_windows;
 
 mod camera;
 mod player;
@@ -84,16 +85,16 @@ fn example_world() -> TileMap {
         width: 10,
         height: 10,
         data: vec![
-            0,0,0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,0,0,
-            0,0,0,16,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,0,0,
-            0,0,16,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,0,0,
-            0,0,0,16,0,0,0,5,0,0,
-            0,16,0,0,0,0,0,0,0,0,
-            0,0,0,0,0,16,0,0,0,0,
-            0,0,0,0,0,0,0,0,16,0,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
+            4,4,4,4,4,4,4,4,4,4,
         ]
     }
 }
@@ -103,12 +104,12 @@ fn draw_world(tiles: &TileMap, assets: &Assets) {
         let grid_x = (tiles_index as u16 % tiles.width) as f32;
         let grid_y = (tiles_index as u16 / tiles.width) as f32;
         draw_texture_ex(
-            assets.get_texture("tiles.png"),
+            assets.get_texture("dbg.png"),
             grid_x * 8.0,
             grid_y * 8.0,
             WHITE, // Make into shadow render later
             DrawTextureParams {
-                source: Some(Rect::new((tile % 8) as f32 * 8.0, (tile / 8) as f32 * 8.0, 8.0, 8.0)),
+                source: Some(Rect::new((tile % 3) as f32 * 8.0, (tile / 3) as f32 * 8.0, 8.0, 8.0)),
                 ..Default::default()
             }
         )
@@ -129,6 +130,7 @@ async fn main() {
 
     let mut bullets: Vec<Bullet> = vec![];
     let mut camera_state = true;
+
 
     // Main game loop
     loop {
@@ -167,7 +169,17 @@ async fn main() {
         draw_text(
             &get_fps().to_string(),
             50.0,
-            50.0, 
+            70.0, 
+            100.0,
+            WHITE,
+        );
+        draw_text(
+            match is_windows() {
+                true => "windows",
+                false => "linux",
+            },
+            50.0,
+            140.0, 
             100.0,
             WHITE,
         );
