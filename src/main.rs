@@ -9,6 +9,7 @@ mod camera;
 mod player;
 mod assets;
 mod entities;
+mod utils;
 mod ui;
 
 fn draw_shadows(player: &Player) {
@@ -97,7 +98,6 @@ fn example_world() -> TileMap {
     }
 }
 
-
 fn draw_world(tiles: &TileMap, assets: &Assets) {
     for (tiles_index, tile) in tiles.data.iter().enumerate() {
         let grid_x = (tiles_index as u16 % tiles.width) as f32;
@@ -151,8 +151,6 @@ async fn main() {
         // Draws example world
         draw_world(&example_world, &assets);
         
-        // draw_texture(&example_world, 0.0, 0.0, WHITE);
-
         // Draw dummy
         dummy.draw(&assets, &player);
         draw_shadows(&player);
@@ -166,7 +164,13 @@ async fn main() {
 
         // Draw in screen space
         set_default_camera();
-        draw_text(&get_fps().to_string(), 50.0, 50.0, 100.0, WHITE);
+        draw_text(
+            &get_fps().to_string(),
+            50.0,
+            50.0, 
+            100.0,
+            WHITE,
+        );
 
         // Rendering UI
         render_ui(&player);

@@ -3,6 +3,7 @@ use macroquad::{
     prelude::*,
 };
 use std::collections::HashMap;
+use crate::utils::is_windows;
 
 pub struct Assets {
     textures: HashMap<String, Texture2D>,
@@ -40,7 +41,10 @@ impl Assets {
                     let path_str = path.to_string_lossy().to_string();
                     // Images
                     if path_str.ends_with(".png") {
-                        let key_path_str = path_str.split("/").last().unwrap();
+                        let key_path_str = match is_windows() {
+                            true => path_str.split("\\").last().unwrap(),
+                            false => path_str.split("/").last().unwrap(),
+                        } ;
                         textures.insert(
                             key_path_str.to_string(),
                             Assets::load_texture(&path_str).await.unwrap(),
@@ -48,7 +52,10 @@ impl Assets {
                     }
                     // Sounds
                     if path_str.ends_with(".wav") {
-                        let key_path_str = path_str.split("/").last().unwrap();
+                        let key_path_str = match is_windows() {
+                            true => path_str.split("\\").last().unwrap(),
+                            false => path_str.split("/").last().unwrap(),
+                        } ;
                         let sound = load_sound(&path_str).await.unwrap();
                         sounds.insert(key_path_str.to_string(), sound);
                     }
