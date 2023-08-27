@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::{camera::GameCamera, Assets};
+use macroquad::prelude::*;
 
 pub struct Player {
     pub pos: Vec2,
@@ -58,7 +58,9 @@ impl Player {
     fn handle_velocity(&mut self) {
         // Determine max velocity based on running state
         let player_max_vel: f32 = {
-            if self.movement_state == PlayerMovementState::Sprinting && self.stamina_state == PlayerStaminaState::Normal {
+            if self.movement_state == PlayerMovementState::Sprinting
+                && self.stamina_state == PlayerStaminaState::Normal
+            {
                 Player::SPRINTING_VELOCITY
             } else {
                 Player::WALKING_VELOCITY
@@ -103,13 +105,15 @@ impl Player {
 
     // Handles stamina regeneration, recovery and depletion
     fn handle_stamina(&mut self) {
-        if self.movement_state == PlayerMovementState::Sprinting && self.stamina <= 0.0 { // Enter recovering stamina state
+        if self.movement_state == PlayerMovementState::Sprinting && self.stamina <= 0.0 {
+            // Enter recovering stamina state
             self.stamina_state = PlayerStaminaState::Recovering
         }
-        if self.movement_state == PlayerMovementState::Sprinting  && self.stamina_state == PlayerStaminaState::Normal {
+        if self.movement_state == PlayerMovementState::Sprinting
+            && self.stamina_state == PlayerStaminaState::Normal
+        {
             self.stamina = (self.stamina - 0.2 * get_frame_time() * 60.0).max(0.0);
-        }
-        else if self.stamina < Player::MAX_STAMINA && !self.is_aiming() {
+        } else if self.stamina < Player::MAX_STAMINA && !self.is_aiming() {
             self.stamina = (self.stamina + 0.1 * get_frame_time() * 60.0).min(Player::MAX_STAMINA);
             if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
                 self.stamina_state = PlayerStaminaState::Normal;
@@ -143,17 +147,17 @@ impl Player {
     // Checks if any keys are down that would move the player
     fn is_moving(&self) -> bool {
         if is_key_down(KeyCode::W) {
-            return true
+            return true;
         }
         if is_key_down(KeyCode::S) {
-            return true
+            return true;
         }
         if is_key_down(KeyCode::A) {
-            return true
+            return true;
         }
         if is_key_down(KeyCode::D) {
-            return true
-        } 
+            return true;
+        }
         false
     }
 
@@ -162,7 +166,7 @@ impl Player {
     }
 
     pub fn is_in_view(&self, pos: Vec2) -> i32 {
-        // Determine the player's facing direction 
+        // Determine the player's facing direction
         let player_direction = Vec2::new(-f32::sin(self.angle), f32::cos(self.angle));
 
         // Define the field of view parameters
@@ -192,12 +196,10 @@ impl Player {
     }
 }
 
-
 // Drawing logic
 impl Player {
     pub fn draw(&self, assets: &Assets) {
-
-        const CENTER_OFFSET: f32 = 1.0/6.0;
+        const CENTER_OFFSET: f32 = 1.0 / 6.0;
 
         // Draw player shadow
         draw_circle(
@@ -215,8 +217,8 @@ impl Player {
         // Draw player
         draw_texture_ex(
             &player_texture,
-            self.pos.x - 17.0/2.0 + CENTER_OFFSET,
-            self.pos.y - 17.0/2.0 - CENTER_OFFSET,
+            self.pos.x - 17.0 / 2.0 + CENTER_OFFSET,
+            self.pos.y - 17.0 / 2.0 - CENTER_OFFSET,
             WHITE,
             DrawTextureParams {
                 rotation: self.angle, // Correction to make the gun face the mouse more accruate
@@ -229,8 +231,8 @@ impl Player {
         // Draw backpack
         draw_texture_ex(
             assets.get_texture("backpack.png"),
-            self.pos.x - 17.0/2.0 + CENTER_OFFSET,
-            self.pos.y - 17.0/2.0 - CENTER_OFFSET,
+            self.pos.x - 17.0 / 2.0 + CENTER_OFFSET,
+            self.pos.y - 17.0 / 2.0 - CENTER_OFFSET,
             WHITE,
             DrawTextureParams {
                 rotation: self.angle, // Correction to make the gun face the mouse more accruate

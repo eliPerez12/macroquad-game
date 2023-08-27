@@ -1,13 +1,16 @@
-use macroquad::{prelude::*, audio::{Sound, load_sound}};
+use macroquad::{
+    audio::{load_sound, Sound},
+    prelude::*,
+};
 use std::collections::HashMap;
 
 pub struct Assets {
     textures: HashMap<String, Texture2D>,
-    sounds: HashMap<String, Sound>
+    sounds: HashMap<String, Sound>,
 }
 
 impl Assets {
-    pub fn get_texture(&self, texture: &str) -> &Texture2D{
+    pub fn get_texture(&self, texture: &str) -> &Texture2D {
         self.textures.get(texture).unwrap()
     }
 
@@ -26,19 +29,22 @@ impl Assets {
         let mut textures: HashMap<String, Texture2D> = HashMap::new();
         let mut sounds: HashMap<String, Sound> = HashMap::new();
         let mut dirs_to_explore = vec![std::path::PathBuf::from("assets")];
-    
+
         while let Some(dir) = dirs_to_explore.pop() {
-            for entry in std::fs::read_dir(dir).unwrap(){
+            for entry in std::fs::read_dir(dir).unwrap() {
                 let entry = entry.unwrap();
                 let path = entry.path();
-                if path.is_dir() && path.to_str().unwrap() != "temp"{
+                if path.is_dir() && path.to_str().unwrap() != "temp" {
                     dirs_to_explore.push(path);
                 } else if path.is_file() {
                     let path_str = path.to_string_lossy().to_string();
                     // Images
                     if path_str.ends_with(".png") {
                         let key_path_str = path_str.split("/").last().unwrap();
-                        textures.insert(key_path_str.to_string(), Assets::load_texture(&path_str).await.unwrap());
+                        textures.insert(
+                            key_path_str.to_string(),
+                            Assets::load_texture(&path_str).await.unwrap(),
+                        );
                     }
                     // Sounds
                     if path_str.ends_with(".wav") {
