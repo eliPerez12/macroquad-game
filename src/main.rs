@@ -101,18 +101,26 @@ fn example_world() -> TileMap {
 
 fn draw_world(tiles: &TileMap, assets: &Assets) {
     for (tiles_index, tile) in tiles.data.iter().enumerate() {
+        let fit_offset = 0.0675;
         let grid_x = (tiles_index as u16 % tiles.width) as f32;
         let grid_y = (tiles_index as u16 / tiles.width) as f32;
+        draw_rectangle(grid_x * 8.0, grid_y * 8.0, 8.0, 8.0, RED);
         draw_texture_ex(
             assets.get_texture("dbg.png"),
             grid_x * 8.0,
             grid_y * 8.0,
             WHITE, // Make into shadow render later
             DrawTextureParams {
-                source: Some(Rect::new((tile % 3) as f32 * 8.0, (tile / 3) as f32 * 8.0, 8.0, 8.0)),
+                source: Some(Rect::new(
+                    (tile % 3) as f32 * 8.0 + fit_offset/2.0,
+                    (tile / 3) as f32 * 8.0 + fit_offset/2.0,
+                    8.0 - fit_offset,
+                    8.0 - fit_offset)
+                ),
+                dest_size: Some(Vec2::new(8.0, 8.0)),
                 ..Default::default()
             }
-        )
+        );
     }
 }
 
