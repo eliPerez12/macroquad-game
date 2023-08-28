@@ -175,38 +175,23 @@ impl Player {
         is_mouse_button_down(MouseButton::Right)
     }
 
-    pub fn get_player_rays(&self, line_length: f32) -> Vec<f32> {
-        let visible_angle = std::f32::consts::PI;
+    pub fn get_player_rays(&self, fov: f32, line_length: f32) -> Vec<f32> {
         let ray_amount = {
-            let amount = (visible_angle / 0.02 * line_length/80.0) as i32;
+            let amount = (fov / 0.02 * line_length/80.0) as i32;
             if amount % 2 == 0 { amount + 1 } else { amount }
         };
-        let angle_increment = visible_angle / ray_amount as f32;
+        let angle_increment = fov / ray_amount as f32;
     
         // Get angles for rays that are evenly divided in the field of view
         let angles: Vec<f32> = (0..ray_amount)
             .map(|ray| {
                 self.angle
                     + angle_increment * ray as f32
-                    - visible_angle / 2.0
+                    - fov / 2.0
                     + angle_increment / 2.0
             })
             .collect();
         angles
-    }
-
-    pub fn draw_debug_rays(&self) {
-        let line_length = 20.0 * 8.0;
-        for angle in self.get_player_rays(line_length) {
-            draw_line(
-                self.pos.x, 
-                self.pos.y,
-                self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
-                self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
-                0.5,
-                RED,
-            );
-        }
     }
 
     pub fn get_hitbox(&self) -> Rect {
@@ -275,5 +260,30 @@ impl Player {
 
     pub fn draw_hitbox(&self) {
         draw_rect(self.get_hitbox(), Color::new(0.0, 1.0, 0.0, 0.8))
+    }
+
+    pub fn draw_debug_rays(&self) {
+        let line_length = 20.0 * 8.0;
+        let fov_direct_view_amount = 6.6 / 8.0;
+        for angle in self.get_player_rays(std::f32::consts::PI, line_length) {
+            draw_line(
+                self.pos.x, 
+                self.pos.y,
+                self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
+                self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
+                0.5,
+                Color::new(0.75, 0.0, 0.0, 1.0),
+            );
+        }
+        for angle in self.get_player_rays(std::f32::consts::PI * fov_direct_view_amount, line_length * fov_direct_view_amount) {
+            draw_line(
+                self.pos.x, 
+                self.pos.y,
+                self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length * fov_direct_view_amount,
+                self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length * fov_direct_view_amount,
+                0.5,
+                RED,
+            );
+        }
     }
 }
