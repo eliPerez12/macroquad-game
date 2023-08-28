@@ -6,6 +6,8 @@ use entities::*;
 use ui::{render_ui, render_debug_ui};
 use world::draw_world;
 
+use crate::world::draw_debug_rays;
+
 mod maps;
 mod world;
 mod camera;
@@ -91,6 +93,7 @@ async fn main() {
 
         // Draws example world
         draw_world(&world, &assets, &player);
+        if debug_on{draw_debug_rays(&player)}
 
         // Draw dummy
         dummy.draw(&assets, &player);

@@ -194,6 +194,26 @@ impl Player {
             3
         }
     }
+
+    pub fn get_player_rays(&self, line_length: f32) -> Vec<f32> {
+        let visible_angle = std::f32::consts::PI;
+        let ray_amount = {
+            let amount = (visible_angle / 0.02 * line_length/80.0) as i32;
+            if amount % 2 == 0 { amount + 1 } else { amount }
+        };
+        let angle_increment = visible_angle / ray_amount as f32;
+    
+        // Get angles for rays that are evenly divided in the field of view
+        let angles: Vec<f32> = (0..ray_amount)
+            .map(|ray| {
+                self.angle
+                    + angle_increment * ray as f32
+                    - visible_angle / 2.0
+                    + angle_increment / 2.0
+            })
+            .collect();
+        angles
+    }
 }
 
 // Drawing logic

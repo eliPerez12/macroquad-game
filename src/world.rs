@@ -9,26 +9,11 @@ pub struct TileMap {
 }
 
 pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
-    let line_length = 20.0 * 8.0;
-    let visible_angle = std::f32::consts::PI;
-    let ray_amount = {
-        let amount = (visible_angle / 0.02 * line_length/80.0) as i32;
-        if amount % 2 == 0 { amount + 1 } else { amount }
-    };
-    let angle_increment = visible_angle / ray_amount as f32;
-
-    // Get angles for rays that are evenly divided in the field of view
-    let angles: Vec<f32> = (0..ray_amount)
-        .map(|ray| {
-            player.angle
-                + angle_increment * ray as f32
-                - visible_angle / 2.0
-                + angle_increment / 2.0
-        })
-        .collect();
     
     // Calculate tiles that are visible to the rays
     let definition = 2.5;
+    let line_length = 20.0 * 8.0;
+    let angles = player.get_player_rays(line_length);
     let visible_tiles = combine_hashsets(
         angles
             .iter()
@@ -38,16 +23,6 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
 
     // Render 
     draw_tiles(tiles, assets, visible_tiles);
-    // for angle in &angles {
-    //     draw_line(
-    //         player.pos.x, 
-    //         player.pos.y,
-    //         player.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
-    //         player.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
-    //         0.6,
-    //         RED,
-    //     );
-    // }
 }
 
 fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
@@ -102,4 +77,18 @@ fn combine_hashsets(hashsets: Vec<HashSet<(u16, u16)>>) -> HashSet<(u16, u16)> {
         combined.extend(set);
     }
     combined
+}
+
+pub fn draw_debug_rays(player: &Player) {
+    let line_length = 20.0 * 8.0;
+    for angle in &player.get_player_rays(line_length) {
+        draw_line(
+            player.pos.x, 
+            player.pos.y,
+            player.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
+            player.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
+            0.5,
+            RED,
+        );
+    }
 }
