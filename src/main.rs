@@ -5,8 +5,7 @@ use player::Player;
 use entities::*;
 use ui::{render_ui, render_debug_ui};
 use world::draw_world;
-
-use crate::world::draw_debug_rays;
+use world::draw_debug_rays;
 
 mod maps;
 mod world;
@@ -70,6 +69,7 @@ async fn main() {
 
     let mut player = Player::new();
     player.pos = Vec2::new(60.0, 50.0);
+    camera.target = player.pos;
 
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
@@ -85,8 +85,6 @@ async fn main() {
             debug_on = !debug_on;
         }
 
-        dbg!(camera.target_zoom);
-
         // Draw in world space
         set_camera(&mut camera);
         clear_background(BLACK);
@@ -100,6 +98,8 @@ async fn main() {
 
         // Draw player
         player.draw(&assets);
+
+        player.render_hitbox();
 
         // Bullets
         for bullet in &bullets {

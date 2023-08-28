@@ -29,7 +29,7 @@ impl GameCamera {
         }
 
         self.target_zoom = self.target_zoom.max(4.0);
-        self.target_zoom = self.target_zoom.min(20.0);
+        self.target_zoom = self.target_zoom.min(25.0);
 
         self.set_camera_zoom();
     }

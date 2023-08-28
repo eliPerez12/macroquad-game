@@ -9,7 +9,7 @@ pub struct Dummy {
 
 impl Dummy {
     pub fn draw(&self, assets: &Assets, player: &Player) {
-        let is_in_view = player.is_in_view(self.pos);
+        let is_in_view = 3; // TODO: REMOVE
         if is_in_view == 0 {
             return;
         };

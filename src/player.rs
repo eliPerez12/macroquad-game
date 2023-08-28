@@ -1,4 +1,4 @@
-use crate::{camera::GameCamera, Assets};
+use crate::{camera::GameCamera, Assets, utils::draw_rect};
 use macroquad::prelude::*;
 
 pub struct Player {
@@ -165,36 +165,6 @@ impl Player {
         is_mouse_button_down(MouseButton::Right)
     }
 
-    pub fn is_in_view(&self, pos: Vec2) -> i32 {
-        // Determine the player's facing direction
-        let player_direction = Vec2::new(-f32::sin(self.angle), f32::cos(self.angle));
-
-        // Define the field of view parameters
-        let small_fov_angle = std::f32::consts::PI / 2.25;
-        let wide_fov_angle = std::f32::consts::PI / 2.5;
-        let very_wide_fov_angle = std::f32::consts::PI / 2.8;
-
-        let fov_distance = 20.0 * 8.0; // 10 tiles
-
-        // Draw shadows
-        let direction_to_tile = (pos - self.pos).normalize();
-        let distance_to_tile = (pos - self.pos).length();
-
-        // Calculate the angle between the player's direction and the direction to the tile
-        let dot_product = direction_to_tile.dot(player_direction);
-        let angle = f32::acos(dot_product);
-
-        if angle > small_fov_angle || distance_to_tile > fov_distance {
-            0
-        } else if angle > wide_fov_angle || distance_to_tile > fov_distance {
-            1
-        } else if angle > very_wide_fov_angle || distance_to_tile > fov_distance {
-            2
-        } else {
-            3
-        }
-    }
-
     pub fn get_player_rays(&self, line_length: f32) -> Vec<f32> {
         let visible_angle = std::f32::consts::PI;
         let ray_amount = {
@@ -213,6 +183,20 @@ impl Player {
             })
             .collect();
         angles
+    }
+
+    pub fn get_hitbox(&self) -> Rect {
+        let rect_size = 4.7;
+        Rect {
+            x: self.pos.x - rect_size/2.0,
+            y: self.pos.y - rect_size/2.0,
+            w: rect_size,
+            h: rect_size, 
+        }
+    }
+
+    pub fn render_hitbox(&self) {
+        draw_rect(self.get_hitbox(), Color::new(1.0, 0.0, 0.0, 0.8))
     }
 }
 

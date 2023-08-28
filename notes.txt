@@ -6,4 +6,4 @@ wine target/x86_64-pc-windows-gnu/debug/macroquad-game.exe
 
 This commit:
 
-fix zoom bug on windows
+make spectrum of angle whatever
