@@ -1,5 +1,5 @@
 use macroquad::{prelude::*, audio::*, miniquad::conf::Icon};
-use std::collections::HashSet;
+use world::*;
 use camera::*;
 use assets::Assets;
 use player::Player;
@@ -8,6 +8,7 @@ use ui::render_ui;
 use utils::is_windows;
 
 mod maps;
+mod world;
 mod camera;
 mod player;
 mod assets;
@@ -76,110 +77,11 @@ fn handle_shooting(bullets: &mut Vec<Bullet>, assets: &Assets, player: &Player, 
     bullets.retain(|bullet| !bullet.hit_something);
 }
 
-pub struct TileMap {
-    data: Vec<u8>,
-    width: u16,
-    height: u16,
-}
-
-fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
-    for (tiles_index, tile) in tiles.data.iter().enumerate() {
-        let fit_offset = 0.0675;
-        let grid_x = tiles_index as u16 % tiles.width;
-        let grid_y = tiles_index as u16 / tiles.width;
-        let color = match visible_tiles.contains(&(grid_x, grid_y)) {
-            true => Color::from_rgba(255, 255, 255, 255),
-            false => Color::from_rgba(200, 200, 200, 255),
-        };
-        draw_texture_ex(
-            assets.get_texture("tiles.png"),
-            grid_x as f32 * 8.0,
-            grid_y as f32 * 8.0,
-            color, // Make into shadow render later
-            DrawTextureParams {
-                source: Some(Rect::new(
-                    ((tile - 1) % 8) as f32 * 8.0 + fit_offset/2.0,
-                    ((tile - 1) / 8) as f32 * 8.0 + fit_offset/2.0,
-                    8.0 - fit_offset,
-                    8.0 - fit_offset)
-                ),
-                dest_size: Some(Vec2::new(8.0, 8.0)),
-                ..Default::default()
-            }
-        );
-    }
-}
-
-fn find_tiles(origin: Vec2, angle: f32, length: f32, definition: f32) -> HashSet<(u16, u16)> {
-    let mut tiles = HashSet::new();
-    let adjusted_angle = angle + std::f32::consts::FRAC_PI_2;
-    let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
-    let (dx, dy) = (adjusted_angle.cos() / definition, adjusted_angle.sin() / definition);
-    let loop_count = (length * definition) as i32;
-
-    for _ in 0..loop_count {
-        let tile_x = x.floor() as u16;
-        let tile_y = y.floor() as u16;
-        tiles.insert((tile_x, tile_y));
-        x += dx;
-        y += dy;
-    }
-    tiles
-}
-
-fn combine_hashsets(hashsets: Vec<HashSet<(u16, u16)>>) -> HashSet<(u16, u16)> {
-    let mut combined = HashSet::new();
-    for set in hashsets {
-        combined.extend(set);
-    }
-    combined
-}
-
-fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
-    let line_length = 10.0 * 8.0;
-    let visible_angle = std::f32::consts::PI;
-    let ray_amount = 35;
-    let angle_increment = visible_angle / ray_amount as f32;
-
-    let angles: Vec<f32> = (0..ray_amount)
-        .map(|ray| {
-            player.angle
-                + angle_increment * ray as f32
-                - visible_angle / 2.0
-                + angle_increment / 2.0
-        })
-        .collect();
-
-    let definition = 2.5;
-    let visible_tiles = combine_hashsets(
-        angles
-            .iter()
-            .map(|&angle| find_tiles(player.pos, angle, line_length / 8.0, definition))
-            .collect(),
-    );
-
-    draw_tiles(tiles, assets, visible_tiles);
-    for angle in &angles {
-        draw_line(
-            player.pos.x, 
-            player.pos.y,
-            player.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
-            player.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
-            1.0,
-            RED,
-        );
-    }
-}
-
-
 #[macroquad::main(conf)]
 async fn main() {
     let mut camera = GameCamera::new();
-    
     let assets = Assets::new().await;
-    
     let world = maps::example_world();
-
     let mut dummy = Dummy { pos: vec2(2.2 * 8.0, 9.3 * 8.0), angle: 0.0 };
 
     let mut player = Player::new();
