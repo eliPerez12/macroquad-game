@@ -8,11 +8,13 @@ pub struct Player {
     pub stamina: f32,
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
+    pub clothes: PlayerClothes,
     pub angle: f32,
 }
 
-pub enum Gun {
-    SawedShotgun
+pub enum PlayerClothes {
+    Blue,
+    Dark,
 }
 
 #[derive(PartialEq, Eq)]
@@ -47,6 +49,7 @@ impl Player {
             stamina_state: PlayerStaminaState::Normal,
             angle: 0.0,
             health: 100.0,
+            clothes: PlayerClothes::Dark,
         }
     }
 
@@ -232,8 +235,14 @@ impl Player {
         );
 
         let player_texture = match self.is_aiming() {
-            true => assets.get_texture("player_aiming.png"),
-            false => assets.get_texture("player.png"),
+            false => assets.get_texture(match self.clothes {
+                PlayerClothes::Blue => "player_blue.png",
+                PlayerClothes::Dark => "player_dark.png",
+            }),
+            true => assets.get_texture(match self.clothes {
+                PlayerClothes::Blue => "player_blue_aiming.png",
+                PlayerClothes::Dark => "player_dark_aiming.png",
+            }),
         };
 
         // Draw player
@@ -243,7 +252,7 @@ impl Player {
             self.pos.y - 17.0 / 2.0 - CENTER_OFFSET,
             WHITE,
             DrawTextureParams {
-                rotation: self.angle, // Correction to make the gun face the mouse more accruate
+                rotation: self.angle, 
                 pivot: Some(self.pos),
                 dest_size: Some(Vec2::new(17.0, 17.0)),
                 ..Default::default()
@@ -257,11 +266,14 @@ impl Player {
             self.pos.y - 17.0 / 2.0 - CENTER_OFFSET,
             WHITE,
             DrawTextureParams {
-                rotation: self.angle, // Correction to make the gun face the mouse more accruate
+                rotation: self.angle,
                 pivot: Some(self.pos),
                 dest_size: Some(Vec2::new(17.0, 17.0)),
                 ..Default::default()
             },
         );
     }
+}
+
+impl PlayerClothes {
 }

@@ -67,10 +67,15 @@ impl Assets {
     }
 
     pub async fn new() -> Self {
-        Self::load_all_assets().await
+        let mut assets = Self::load_all_assets().await;
+        assets.load_clothes().await;
+        assets
     }
 
-    pub async fn get_clothes_from_bitmap(dyn_image: &DynamicImage, clothes: PlayerClothesNormal) -> Texture2D {
+    pub async fn get_clothes_from_bitmap(
+        dyn_image: &DynamicImage,
+        colors: (Color, Color, Color, Color, Color)
+    ) -> Texture2D {
     
         let mut image = Image::empty();
         image.width = dyn_image.width() as u16;
@@ -78,7 +83,6 @@ impl Assets {
         image.bytes = vec![0;(image.width * image.height * 4) as usize];
         for pixel in dyn_image.pixels() {
             if pixel.2.0[3] == 0 {continue};
-            let colors = clothes.get_colors();
             let color = match pixel.2.0[0] {
                 67 => colors.0,
                 47 => colors.1,
@@ -100,30 +104,74 @@ impl Assets {
     
         texture
     }
-}
 
-pub enum PlayerClothesNormal {
-    Blue,
-    Dark,
-}
+    async fn load_bitmap(path: &str) -> DynamicImage {
+        let dyn_image = image::load_from_memory(
+            &{
+                let file = load_file(path)
+                .await.unwrap();
+                file
+        }).unwrap();
+        dyn_image
+    }
 
-impl PlayerClothesNormal {
-    fn get_colors(&self) -> (Color, Color, Color, Color, Color) {
-        match self {
-            PlayerClothesNormal::Blue => (
-                Color::from_rgba(41, 98, 173, 255),
-                Color::from_rgba(56, 61, 115, 255),
-                Color::from_rgba(49, 86, 135, 255),
-                Color::from_rgba(38, 41, 79, 255),
-                Color::from_rgba(25, 27, 48, 255),
-            ),
-            PlayerClothesNormal::Dark => (
+    async fn insert_clothes_pair(
+        &mut self,
+        bitmap: &DynamicImage,
+        aiming_bitmap: &DynamicImage,
+        color_name: &str,
+        colors: (Color, Color, Color, Color, Color)
+    ) {
+        self.textures.insert(
+            format!(
+                "player_{}.png",
+                color_name,
+            ), 
+            Assets::get_clothes_from_bitmap(
+                bitmap,
+                (
+                colors.0,
+                colors.1,
+                colors.2,
+                colors.3,
+                colors.4,
+            )
+        ).await);
+        self.textures.insert(
+            format!(
+                "player_{}_aiming.png",
+                color_name,
+            ), 
+            Assets::get_clothes_from_bitmap(
+                bitmap,
+                (
+                colors.0,
+                colors.1,
+                colors.2,
+                colors.3,
+                colors.4,
+            )
+        ).await);
+    }
+
+    pub async fn load_clothes(&mut self) {
+        let player_bitmap = Assets::load_bitmap("assets/For Julio/player_bitmap.png").await;
+        let player_aiming_bitmap = Assets::load_bitmap("assets/For Julio/player_aiming_bitmap.png").await;
+        
+        self.insert_clothes_pair(&player_bitmap, &player_aiming_bitmap, "blue", (
+            Color::from_rgba(41, 98, 173, 255),
+            Color::from_rgba(56, 61, 115, 255),
+            Color::from_rgba(49, 86, 135, 255),
+            Color::from_rgba(38, 41, 79, 255),
+            Color::from_rgba(25, 27, 48, 255),
+        )).await;
+        self.insert_clothes_pair(&player_bitmap, &player_aiming_bitmap, "dark", (
                 Color::from_rgba(67, 67, 67, 255),
                 Color::from_rgba(47, 47, 47, 255),
                 Color::from_rgba(64, 64, 64, 255),
                 Color::from_rgba(35, 35, 35, 255),
                 Color::from_rgba(27, 27, 27, 255),
-            ),
-        }
+        )).await;
+
     }
 }

@@ -1,5 +1,4 @@
 use macroquad::{prelude::*, audio::*, miniquad::conf::Icon};
-use image::{self, GenericImageView, DynamicImage};
 use camera::GameCamera;
 use assets::Assets;
 use player::Player;
@@ -59,16 +58,6 @@ fn handle_shooting(bullets: &mut Vec<Bullet>, assets: &Assets, player: &Player, 
     bullets.retain(|bullet| !bullet.hit_something);
 }
 
-async fn load_bitmap(path: &str) -> DynamicImage {
-    let dyn_image = image::load_from_memory(
-        &{
-            let file = load_file(path)
-            .await.unwrap();
-            file
-    }).unwrap();
-    dyn_image
-}
-
 #[macroquad::main(conf)]
 async fn main() {
     let mut camera = GameCamera::new();
@@ -80,14 +69,6 @@ async fn main() {
     let mut player = Player::new();
     player.pos = Vec2::new(60.0, 50.0);
     camera.target = player.pos;
-
-    let player_bitmap = load_bitmap("assets/For Julio/player.png").await;
-    let _player_aiming_bitmap = load_bitmap("assets/For Julio/player_aiming.png").await;
-
-    let texture = Assets::get_clothes_from_bitmap(
-        &player_bitmap,
-        assets::PlayerClothesNormal::Dark)
-    .await;
 
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
@@ -122,9 +103,6 @@ async fn main() {
         for bullet in &bullets {
             draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
         }
-
-        // TODO:
-        draw_texture(&texture, 0.0, 0.0, WHITE);
 
         // Draw in screen space
         set_default_camera();
