@@ -62,8 +62,16 @@ fn find_tiles(origin: Vec2, angle: f32, length: f32, definition: f32) -> HashSet
     let loop_count = (length * definition) as i32;
 
     for _ in 0..loop_count {
-        let tile_x = x.floor() as u16;
-        let tile_y = y.floor() as u16;
+        let tile_x = {
+            let x = x.floor();
+            if x < 0.0 {continue}
+            else {x as u16}
+        };
+        let tile_y = {
+            let y = y.floor();
+            if y < 0.0 {continue}
+            else {y as u16}
+        };
         tiles.insert((tile_x, tile_y));
         x += dx;
         y += dy;
