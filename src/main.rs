@@ -82,7 +82,9 @@ async fn main() {
         if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::T) {
             debug_on = !debug_on;
         }
-        
+
+        dbg!(camera.target_zoom);
+
         // Draw in world space
         set_camera(&mut camera);
         clear_background(BLACK);

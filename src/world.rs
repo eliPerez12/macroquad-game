@@ -52,7 +52,7 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
 
 fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
     for (tiles_index, tile) in tiles.data.iter().enumerate() {
-        let fit_offset = 0.0675;
+        let fit_offset = 0.25;
         let grid_x = tiles_index as u16 % tiles.width;
         let grid_y = tiles_index as u16 / tiles.width;
         let color = match visible_tiles.contains(&(grid_x, grid_y)) {
