@@ -143,7 +143,7 @@ impl Assets {
                 color_name,
             ), 
             Assets::get_clothes_from_bitmap(
-                bitmap,
+                aiming_bitmap,
                 (
                 colors.0,
                 colors.1,

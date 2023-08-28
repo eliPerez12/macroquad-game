@@ -49,21 +49,28 @@ pub fn render_ui(player: &Player) {
 }
 
 pub fn render_debug_ui() {
-    let text_size = 100.0;
+    let text_size = 50.0;
+    draw_text(
+        "Debug Menu v0.1.2",
+        text_size/2.0,
+        text_size/2.0 * 1.0 + text_size/4.0 * 1.0, 
+        text_size,
+        WHITE,
+    );
     draw_text(
         &format!("FPS: {}", &get_fps().to_string()),
         text_size/2.0,
-        70.0, 
+        text_size/2.0 * 2.0 + text_size/4.0 * 2.0, 
         text_size,
         WHITE,
     );
     draw_text(
         &format!("OS: {}",match is_windows() {
-            true => "windows",
-            false => "linux",
+            true => "Windows",
+            false => "Linux",
         }),
         text_size/2.0,
-        140.0, 
+        text_size/2.0 * 3.0 + text_size/4.0 * 3.0, 
         text_size,
         WHITE,
     );

@@ -8,7 +8,7 @@ pub struct Dummy {
 }
 
 impl Dummy {
-    pub fn draw(&self, assets: &Assets, player: &Player) {
+    pub fn draw(&self, assets: &Assets, _player: &Player) {
         let is_in_view = 3; // TODO: REMOVE
         if is_in_view == 0 {
             return;
