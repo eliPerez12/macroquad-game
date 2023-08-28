@@ -1,4 +1,4 @@
-use crate::player::*;
+use crate::{player::*, utils::is_windows};
 use macroquad::prelude::*;
 
 fn draw_rect(rect: &Rect, color: Color) {
@@ -46,4 +46,24 @@ pub fn render_ui(player: &Player) {
 
     draw_rect(&filled_stamina_bar, stamina_bar_color);
     draw_rect_lines(&stamina_bar, 3.0, BLACK);
+}
+
+pub fn render_debug_ui() {
+    draw_text(
+        &get_fps().to_string(),
+        50.0,
+        70.0, 
+        100.0,
+        WHITE,
+    );
+    draw_text(
+        match is_windows() {
+            true => "windows",
+            false => "linux",
+        },
+        50.0,
+        140.0, 
+        100.0,
+        WHITE,
+    );
 }
