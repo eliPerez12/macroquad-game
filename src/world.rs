@@ -78,17 +78,3 @@ fn combine_hashsets(hashsets: Vec<HashSet<(u16, u16)>>) -> HashSet<(u16, u16)> {
     }
     combined
 }
-
-pub fn draw_debug_rays(player: &Player) {
-    let line_length = 20.0 * 8.0;
-    for angle in &player.get_player_rays(line_length) {
-        draw_line(
-            player.pos.x, 
-            player.pos.y,
-            player.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
-            player.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
-            0.5,
-            RED,
-        );
-    }
-}

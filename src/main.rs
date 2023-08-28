@@ -1,11 +1,11 @@
-use camera::GameCamera;
 use macroquad::{prelude::*, audio::*, miniquad::conf::Icon};
+use image::{self, GenericImageView, DynamicImage};
+use camera::GameCamera;
 use assets::Assets;
 use player::Player;
 use entities::*;
 use ui::{render_ui, render_debug_ui};
 use world::draw_world;
-use world::draw_debug_rays;
 
 mod maps;
 mod world;
@@ -59,6 +59,16 @@ fn handle_shooting(bullets: &mut Vec<Bullet>, assets: &Assets, player: &Player, 
     bullets.retain(|bullet| !bullet.hit_something);
 }
 
+async fn load_bitmap(path: &str) -> DynamicImage {
+    let dyn_image = image::load_from_memory(
+        &{
+            let file = load_file(path)
+            .await.unwrap();
+            file
+    }).unwrap();
+    dyn_image
+}
+
 #[macroquad::main(conf)]
 async fn main() {
     let mut camera = GameCamera::new();
@@ -70,6 +80,14 @@ async fn main() {
     let mut player = Player::new();
     player.pos = Vec2::new(60.0, 50.0);
     camera.target = player.pos;
+
+    let player_bitmap = load_bitmap("assets/For Julio/player.png").await;
+    let _player_aiming_bitmap = load_bitmap("assets/For Julio/player_aiming.png").await;
+
+    let texture = Assets::get_clothes_from_bitmap(
+        &player_bitmap,
+        assets::PlayerClothesNormal::Dark)
+    .await;
 
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
@@ -91,27 +109,29 @@ async fn main() {
 
         // Draws example world
         draw_world(&world, &assets, &player);
-        if debug_on{draw_debug_rays(&player)}
+        if debug_on{player.draw_debug_rays()}
 
         // Draw dummy
         dummy.draw(&assets, &player);
 
         // Draw player
         player.draw(&assets);
-
-        player.render_hitbox();
+        if debug_on{player.draw_hitbox()}
 
         // Bullets
         for bullet in &bullets {
             draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
         }
 
+        // TODO:
+        draw_texture(&texture, 0.0, 0.0, WHITE);
+
         // Draw in screen space
         set_default_camera();
 
         // Rendering UI
         render_ui(&player);
-        if debug_on{render_debug_ui()}
+        if debug_on{render_debug_ui();}
         next_frame().await;
     }
 }

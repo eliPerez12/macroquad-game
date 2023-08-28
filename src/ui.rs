@@ -49,21 +49,22 @@ pub fn render_ui(player: &Player) {
 }
 
 pub fn render_debug_ui() {
+    let text_size = 100.0;
     draw_text(
-        &get_fps().to_string(),
-        50.0,
+        &format!("FPS: {}", &get_fps().to_string()),
+        text_size/2.0,
         70.0, 
-        100.0,
+        text_size,
         WHITE,
     );
     draw_text(
-        match is_windows() {
+        &format!("OS: {}",match is_windows() {
             true => "windows",
             false => "linux",
-        },
-        50.0,
+        }),
+        text_size/2.0,
         140.0, 
-        100.0,
+        text_size,
         WHITE,
     );
 }

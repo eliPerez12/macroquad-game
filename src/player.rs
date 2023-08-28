@@ -11,6 +11,10 @@ pub struct Player {
     pub angle: f32,
 }
 
+pub enum Gun {
+    SawedShotgun
+}
+
 #[derive(PartialEq, Eq)]
 pub enum PlayerMovementState {
     Idle,
@@ -185,6 +189,20 @@ impl Player {
         angles
     }
 
+    pub fn draw_debug_rays(&self) {
+        let line_length = 20.0 * 8.0;
+        for angle in self.get_player_rays(line_length) {
+            draw_line(
+                self.pos.x, 
+                self.pos.y,
+                self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
+                self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
+                0.5,
+                RED,
+            );
+        }
+    }
+
     pub fn get_hitbox(&self) -> Rect {
         let rect_size = 4.7;
         Rect {
@@ -195,7 +213,7 @@ impl Player {
         }
     }
 
-    pub fn render_hitbox(&self) {
+    pub fn draw_hitbox(&self) {
         draw_rect(self.get_hitbox(), Color::new(1.0, 0.0, 0.0, 0.8))
     }
 }

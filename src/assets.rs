@@ -1,3 +1,4 @@
+use image::{DynamicImage, GenericImageView};
 use macroquad::{
     audio::{load_sound, Sound},
     prelude::*,
@@ -67,5 +68,62 @@ impl Assets {
 
     pub async fn new() -> Self {
         Self::load_all_assets().await
+    }
+
+    pub async fn get_clothes_from_bitmap(dyn_image: &DynamicImage, clothes: PlayerClothesNormal) -> Texture2D {
+    
+        let mut image = Image::empty();
+        image.width = dyn_image.width() as u16;
+        image.height = dyn_image.height() as u16;
+        image.bytes = vec![0;(image.width * image.height * 4) as usize];
+        for pixel in dyn_image.pixels() {
+            if pixel.2.0[3] == 0 {continue};
+            let colors = clothes.get_colors();
+            let color = match pixel.2.0[0] {
+                67 => colors.0,
+                47 => colors.1,
+                64 => colors.2,
+                35 => colors.3,
+                27 => colors.4,
+                _ => Color::new(
+                    pixel.2.0[0] as f32 / 255.0,
+                    pixel.2.0[1] as f32 / 255.0,
+                    pixel.2.0[2] as f32 / 255.0,
+                    pixel.2.0[3] as f32 / 255.0,
+                ),
+            };
+            image.set_pixel(pixel.0, pixel.1, color);
+        };
+    
+        let texture = Texture2D::from_image(&image);
+        texture.set_filter(FilterMode::Nearest);
+    
+        texture
+    }
+}
+
+pub enum PlayerClothesNormal {
+    Blue,
+    Dark,
+}
+
+impl PlayerClothesNormal {
+    fn get_colors(&self) -> (Color, Color, Color, Color, Color) {
+        match self {
+            PlayerClothesNormal::Blue => (
+                Color::from_rgba(41, 98, 173, 255),
+                Color::from_rgba(56, 61, 115, 255),
+                Color::from_rgba(49, 86, 135, 255),
+                Color::from_rgba(38, 41, 79, 255),
+                Color::from_rgba(25, 27, 48, 255),
+            ),
+            PlayerClothesNormal::Dark => (
+                Color::from_rgba(67, 67, 67, 255),
+                Color::from_rgba(47, 47, 47, 255),
+                Color::from_rgba(64, 64, 64, 255),
+                Color::from_rgba(35, 35, 35, 255),
+                Color::from_rgba(27, 27, 27, 255),
+            ),
+        }
     }
 }
