@@ -109,7 +109,7 @@ async fn main() {
 
         // Rendering UI
         render_ui(&player);
-        if debug_on{render_debug_ui();}
+        if debug_on{render_debug_ui(&player, &camera);}
         next_frame().await;
     }
 }

@@ -1,4 +1,4 @@
-use crate::{player::*, utils::is_windows};
+use crate::{player::*, utils::is_windows, camera::GameCamera};
 use macroquad::prelude::*;
 
 fn draw_rect(rect: &Rect, color: Color) {
@@ -48,7 +48,7 @@ pub fn render_ui(player: &Player) {
     draw_rect_lines(&stamina_bar, 3.0, BLACK);
 }
 
-pub fn render_debug_ui() {
+pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
     let text_size = 50.0;
     draw_text(
         "Debug Menu v0.1.2",
@@ -74,4 +74,33 @@ pub fn render_debug_ui() {
         text_size,
         WHITE,
     );
+    draw_text(
+        &format!("Health: {}", player.health),
+        text_size/2.0,
+        text_size/2.0 * 4.0 + text_size/4.0 * 4.0, 
+        text_size,
+        WHITE,
+    );
+    draw_text(
+        &format!("Stamina: {}", player.stamina),
+        text_size/2.0,
+        text_size/2.0 * 5.0 + text_size/4.0 * 5.0, 
+        text_size,
+        WHITE,
+    );
+    draw_text(
+        &format!("Player Pos: {}", (player.pos/8.0).floor() ),
+        text_size/2.0,
+        text_size/2.0 * 6.0 + text_size/4.0 * 6.0, 
+        text_size,
+        WHITE,
+    );
+    draw_text(
+        &format!("Aiming at: {}", (camera.screen_to_world(mouse_position().into())/8.0).floor() ),
+        text_size/2.0,
+        text_size/2.0 * 7.0 + text_size/4.0 * 7.0, 
+        text_size,
+        WHITE,
+    );
 }
+

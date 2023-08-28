@@ -36,9 +36,12 @@ impl Player {
     const MIN_STAMINA_FOR_SPRINTING: f32 = 15.0;
 
     const SPRINTING_VELOCITY: f32 = 0.40;
-    const WALKING_VELOCITY: f32 = 0.28;
+    const WALKING_VELOCITY: f32 = 0.25;
     const PLAYER_ACC: f32 = 0.1; // Acceleration
     const PLAYER_DEACC: f32 = 0.05; // Deacceleration
+
+    const STAMINA_REGEN: f32 = 0.07;
+    const STAMINA_COST: f32 = 0.235;
 
     pub fn new() -> Player {
         Player {
@@ -119,9 +122,9 @@ impl Player {
         if self.movement_state == PlayerMovementState::Sprinting
             && self.stamina_state == PlayerStaminaState::Normal
         {
-            self.stamina = (self.stamina - 0.2 * get_frame_time() * 60.0).max(0.0);
+            self.stamina = (self.stamina - Player::STAMINA_COST * get_frame_time() * 60.0).max(0.0);
         } else if self.stamina < Player::MAX_STAMINA && !self.is_aiming() {
-            self.stamina = (self.stamina + 0.1 * get_frame_time() * 60.0).min(Player::MAX_STAMINA);
+            self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0).min(Player::MAX_STAMINA);
             if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
                 self.stamina_state = PlayerStaminaState::Normal;
             }
@@ -215,10 +218,6 @@ impl Player {
             h: rect_size, 
         }
     }
-
-    pub fn draw_hitbox(&self) {
-        draw_rect(self.get_hitbox(), Color::new(1.0, 0.0, 0.0, 0.8))
-    }
 }
 
 // Drawing logic
@@ -273,7 +272,8 @@ impl Player {
             },
         );
     }
-}
 
-impl PlayerClothes {
+    pub fn draw_hitbox(&self) {
+        draw_rect(self.get_hitbox(), Color::new(0.0, 1.0, 0.0, 0.8))
+    }
 }
