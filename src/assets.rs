@@ -123,10 +123,7 @@ impl Assets {
         colors: (Color, Color, Color, Color, Color)
     ) {
         self.textures.insert(
-            format!(
-                "player_{}.png",
-                color_name,
-            ), 
+            format!("{color_name}_clothes_idle.png"), 
             Assets::get_clothes_from_bitmap(
                 bitmap,
                 (
@@ -138,10 +135,7 @@ impl Assets {
             )
         ).await);
         self.textures.insert(
-            format!(
-                "player_{}_aiming.png",
-                color_name,
-            ), 
+            format!("{color_name}_clothes_aiming.png"), 
             Assets::get_clothes_from_bitmap(
                 aiming_bitmap,
                 (

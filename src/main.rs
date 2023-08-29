@@ -7,6 +7,7 @@ use ui::{render_ui, render_debug_ui};
 use world::draw_world;
 
 mod maps;
+mod items;
 mod world;
 mod camera;
 mod player;

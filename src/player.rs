@@ -1,4 +1,4 @@
-use crate::{camera::GameCamera, Assets, utils::draw_rect};
+use crate::{camera::GameCamera, Assets, utils::draw_rect, items::Item};
 use macroquad::prelude::*;
 
 pub struct Player {
@@ -10,19 +10,10 @@ pub struct Player {
     
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
-    pub clothes: PlayerClothes,
-    pub gun: Gun,
+    pub clothes: Item::Clothes,
+    pub gun: Item::Gun,
 }
 
-pub enum PlayerClothes {
-    Blue,
-    Dark,
-}
-
-pub enum Gun {
-    SawedShotgun,
-    Sniper,
-}
 
 #[derive(PartialEq, Eq)]
 pub enum PlayerMovementState {
@@ -59,28 +50,42 @@ impl Player {
             stamina_state: PlayerStaminaState::Normal,
             angle: 0.0,
             health: 100.0,
-            clothes: PlayerClothes::Dark,
-            gun: Gun::Sniper,
+            clothes: Item::dark_clothes(),
+            gun: Item::sawed_shotgun(),
         }
     }
 
     // Function to handle player movements
     pub fn handle_player_movements(&mut self, camera: &GameCamera) {
+        // Update
         self.handle_movement_state();
         self.handle_velocity();
         self.handle_stamina();
-        self.handle_gun_controls();
         
+        // TEMP FOR DEBUG
+        self.handle_gun_controls();
+        self.handle_clothes_controls();
+        
+        // Apply
         self.apply_velocity();
         self.update_angle_to_mouse(camera);
     }
 
     fn handle_gun_controls(&mut self) {
         if is_key_pressed(KeyCode::Key1) {
-            self.gun = Gun::SawedShotgun
+            self.gun = Item::sawed_shotgun()
         }
         if is_key_pressed(KeyCode::Key2) {
-            self.gun = Gun::Sniper
+            self.gun = Item::sniper()
+        }
+    }
+
+    fn handle_clothes_controls(&mut self) {
+        if is_key_pressed(KeyCode::Key3) {
+            self.clothes = Item::blue_clothes()
+        }
+        if is_key_pressed(KeyCode::Key4) {
+            self.clothes = Item::dark_clothes()
         }
     }
 
@@ -244,28 +249,19 @@ impl Player {
 
     pub fn draw(&self, assets: &Assets) {
         const CENTER_OFFSET: f32 = 1.0 / 6.0;
-        // Get gun
-        let gun_texture = match self.gun {
-            Gun::SawedShotgun => match self.is_aiming() {
-                true => assets.get_texture("shotgun_aiming.png"),
-                false => assets.get_texture("shotgun_idle.png"),
-            },
-            Gun::Sniper => match self.is_aiming() {
-                true => assets.get_texture("sniper_aiming.png"),
-                false => assets.get_texture("sniper_idle.png"),
-            },
+
+        // Get gun texture
+        let gun_name = self.gun.name;
+        let gun_texture = match self.is_aiming() {
+            true => assets.get_texture(&format!("{gun_name}_aiming.png")),
+            false => assets.get_texture(&format!("{gun_name}_idle.png")),
         };
 
         // Get player texture
+        let clothes_name = self.clothes.name;
         let player_texture = match self.is_aiming() {
-            false => assets.get_texture(match self.clothes {
-                PlayerClothes::Blue => "player_blue.png",
-                PlayerClothes::Dark => "player_dark.png",
-            }),
-            true => assets.get_texture(match self.clothes {
-                PlayerClothes::Blue => "player_blue_aiming.png",
-                PlayerClothes::Dark => "player_dark_aiming.png",
-            }),
+            true => assets.get_texture(&format!("{clothes_name}_clothes_aiming.png")),
+            false => assets.get_texture(&format!("{clothes_name}_clothes_idle.png")),
         };
 
         // Get backpack texture
