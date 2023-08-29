@@ -108,7 +108,7 @@ fn find_tiles(
 fn find_visible_tiles(origin: Vec2, angle: f32, length: f32, definition: f32) -> HashSet<(u16, u16, Visibility)> {
     let mut tiles = HashSet::new();
     find_tiles(&mut tiles, angle, length, definition, origin, Visibility::Peripheral);
-    find_tiles(&mut tiles, angle * 7.0/8.0 , length * 7.0/8.0, definition, origin, Visibility::Direct);
+    find_tiles(&mut tiles, angle , length * 7.0/8.0, definition, origin, Visibility::Direct);
     tiles
 }
 

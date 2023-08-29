@@ -155,8 +155,8 @@ impl Assets {
     }
 
     pub async fn load_clothes(&mut self) {
-        let player_bitmap = Assets::load_bitmap("assets/For Julio/player_bitmap.png").await;
-        let player_aiming_bitmap = Assets::load_bitmap("assets/For Julio/player_aiming_bitmap.png").await;
+        let player_bitmap = Assets::load_bitmap("assets/Bitmaps/player_idle_bitmap.png").await;
+        let player_aiming_bitmap = Assets::load_bitmap("assets/Bitmaps/player_aiming_bitmap.png").await;
         
         self.insert_clothes_pair(&player_bitmap, &player_aiming_bitmap, "blue", (
             Color::from_rgba(41, 98, 173, 255),
