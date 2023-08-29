@@ -50,8 +50,8 @@ impl Player {
             stamina_state: PlayerStaminaState::Normal,
             angle: 0.0,
             health: 100.0,
-            clothes: Item::dark_clothes(),
-            gun: Item::sawed_shotgun(),
+            clothes: Item::Clothes::dark_clothes(),
+            gun: Item::Gun::sawed_shotgun(),
         }
     }
 
@@ -73,19 +73,19 @@ impl Player {
 
     fn handle_gun_controls(&mut self) {
         if is_key_pressed(KeyCode::Key1) {
-            self.gun = Item::sawed_shotgun()
+            self.gun = Item::Gun::sawed_shotgun()
         }
         if is_key_pressed(KeyCode::Key2) {
-            self.gun = Item::sniper()
+            self.gun = Item::Gun::sniper()
         }
     }
 
     fn handle_clothes_controls(&mut self) {
         if is_key_pressed(KeyCode::Key3) {
-            self.clothes = Item::blue_clothes()
+            self.clothes = Item::Clothes::blue_clothes()
         }
         if is_key_pressed(KeyCode::Key4) {
-            self.clothes = Item::dark_clothes()
+            self.clothes = Item::Clothes::dark_clothes()
         }
     }
 

@@ -1,5 +1,4 @@
 
-
 #[allow(non_upper_case_globals, non_snake_case)]
 pub mod Item {
 
@@ -16,24 +15,27 @@ pub mod Item {
     }
 
     // Guns
-    pub fn sawed_shotgun() -> Gun {
-        Gun {
-            name: "sawed_shotgun",
-            bullet_speed: 6.5,
-            bullet_spread: 0.15,
-            bullets_per_shot: 8,
+    impl Gun {
+        pub fn sawed_shotgun() -> Gun {
+            Gun {
+                name: "sawed_shotgun",
+                bullet_speed: 6.5,
+                bullet_spread: 0.15,
+                bullets_per_shot: 8,
+            }
+        }
+    
+        pub fn sniper() -> Gun {
+            Gun {
+                name: "sniper",
+                bullet_speed: 9.0,
+                bullet_spread: 0.01,
+                bullets_per_shot: 1
+            }
         }
     }
 
-    pub fn sniper() -> Gun {
-        Gun {
-            name: "sniper",
-            bullet_speed: 9.0,
-            bullet_spread: 0.01,
-            bullets_per_shot: 1
-        }
-    }
-
+    impl Clothes {
     // Clothes
     pub fn blue_clothes() -> Clothes {
         Clothes {
@@ -44,6 +46,7 @@ pub mod Item {
         Clothes {
             name: "dark" 
         }
+    }
     }
 }
 
