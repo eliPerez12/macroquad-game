@@ -20,13 +20,20 @@ pub struct TileMap {
     pub height: u16,
 }
 
+
+impl TileMap {
+    fn get_tile(&self, grid_pos: (u16, u16)) -> Option<&u8>{
+        self.data.get((grid_pos.0 + grid_pos.1 * self.width) as usize)
+    }
+}
+
 pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
     
     // Calculate tiles that are visible to the rays
     let direct_angles = player.get_player_rays(std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR, LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR);
     let peripheral_angles = player.get_player_rays(std::f32::consts::PI, LINE_LENGTH);
 
-    let peripheral_tiles = combine_hashsets(
+    let visible_tiles = combine_hashsets(vec![combine_hashsets(
         peripheral_angles
             .iter()
             .map(|&angle| find_visible_tiles(
@@ -36,8 +43,7 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
                 Visibility::Peripheral
             )
         ).collect(),
-    );
-    let visible_tiles = combine_hashsets(
+    ), combine_hashsets(
         direct_angles
             .iter()
             .map(|&angle| find_visible_tiles(
@@ -47,8 +53,7 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
                 Visibility::Direct
             )
         ).collect(),
-    );
-    let visible_tiles = combine_hashsets(vec![visible_tiles, peripheral_tiles]);
+    )]);
 
     // Render 
     draw_tiles(tiles, assets, visible_tiles);
@@ -68,7 +73,6 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets,visible_tiles: HashSet<(u16, u16,
     const FIT_OFFSET: f32 = 0.25;
     const PERIPHERAL_TILE_COLOR: Color = Color::new(0.9, 0.9, 0.9, 1.0);
     const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
-
 
     for (tiles_index, tile) in tiles.data.iter().enumerate() {
         let grid_x = tiles_index as u16 % tiles.width;

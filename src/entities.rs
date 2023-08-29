@@ -1,11 +1,24 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, audio::{PlaySoundParams, play_sound}};
+use crate::{assets::Assets, camera::GameCamera, player::{Gun, Player}};
 
-use crate::{assets::Assets, camera::GameCamera, player::Player};
+const SAWED_SHOTGUN_SPREAD: f32 = 0.15;
+const SAWED_SHOTGUN_SPEED: f32 = 6.5;
+
+const SNIPER_SPREAD: f32 = 0.01;
+const SNIPER_SPEED: f32 = 9.0;
 
 pub struct Dummy {
     pub pos: Vec2,
     pub angle: f32,
 }
+
+pub struct Bullet {
+    pub pos: Vec2,
+    pub vel: f32,
+    pub angle: f32,
+    pub hit_something: bool,
+}
+
 
 impl Dummy {
     pub fn draw(&self, assets: &Assets, _player: &Player) {
@@ -56,9 +69,69 @@ impl Dummy {
     }
 }
 
-pub struct Bullet {
-    pub pos: Vec2,
-    pub vel: f32,
-    pub angle: f32,
-    pub hit_something: bool,
+pub fn handle_shooting(bullets: &mut Vec<Bullet>, assets: &Assets, player: &Player, camera: &GameCamera) {
+    let is_shooting = (
+        is_mouse_button_pressed(MouseButton::Left) | is_key_pressed(KeyCode::Space))
+        && is_mouse_button_down(MouseButton::Right);
+    
+
+    if is_shooting {
+        match player.gun {
+            Gun::SawedShotgun => {
+                for _ in 0..8 {
+                let bullet_speed = SAWED_SHOTGUN_SPEED + rand::gen_range(-SAWED_SHOTGUN_SPREAD, SAWED_SHOTGUN_SPREAD); // Apply speed spread
+    
+                let mouse_pos: Vec2 = mouse_position().into();
+                let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
+                let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
+                let angle = angle + rand::gen_range(-SAWED_SHOTGUN_SPREAD, SAWED_SHOTGUN_SPREAD); // Apply angular spread
+            
+                bullets.push(Bullet {
+                    pos: player.pos,
+                    vel: bullet_speed,
+                    hit_something: false,
+                    angle,
+                });
+            }
+            play_sound(assets.get_sound("shotgun00.wav"), PlaySoundParams { looped: false, volume: 0.3 });
+            },
+            Gun::Sniper => {
+                let bullet_speed = SNIPER_SPEED + rand::gen_range(-SNIPER_SPREAD, SNIPER_SPREAD); // Apply speed spread
+    
+                let mouse_pos: Vec2 = mouse_position().into();
+                let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
+                let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
+                let angle = angle + rand::gen_range(-SNIPER_SPREAD, SNIPER_SPREAD); // Apply angular spread
+            
+                bullets.push(Bullet {
+                    pos: player.pos,
+                    vel: bullet_speed,
+                    hit_something: false,
+                    angle,
+                });
+            play_sound(assets.get_sound("shotgun00.wav"), PlaySoundParams { looped: false, volume: 0.3 });
+            },
+        }
+
+    }
+
+    for bullet in  &mut *bullets {
+        let drag = 0.15;
+        if bullet.vel >= 0.0 {
+            bullet.vel -= drag;
+            bullet.vel = bullet.vel.max(0.0);
+        } else {
+            bullet.vel += drag;
+            bullet.vel = bullet.vel.min(0.0);
+        }
+        bullet.pos += Vec2::new(
+            f32::sin(bullet.angle) * bullet.vel,
+            f32::cos(bullet.angle) * bullet.vel
+        ) * get_frame_time() * 60.0;
+    
+        if bullet.vel.abs() < 1.0 {
+            bullet.hit_something = true
+        }
+    }
+    bullets.retain(|bullet| !bullet.hit_something);
 }

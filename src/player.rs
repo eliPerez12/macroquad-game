@@ -69,8 +69,19 @@ impl Player {
         self.handle_movement_state();
         self.handle_velocity();
         self.handle_stamina();
+        self.handle_gun_controls();
+        
         self.apply_velocity();
         self.update_angle_to_mouse(camera);
+    }
+
+    fn handle_gun_controls(&mut self) {
+        if is_key_pressed(KeyCode::Key1) {
+            self.gun = Gun::SawedShotgun
+        }
+        if is_key_pressed(KeyCode::Key2) {
+            self.gun = Gun::Sniper
+        }
     }
 
     fn handle_velocity(&mut self) {
