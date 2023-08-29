@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use macroquad::prelude::*;
 use crate::{assets::Assets, player::Player};
 
+
 #[derive(Eq, PartialEq, Hash, Clone)]
 enum Visibility {
     NotVisible,
@@ -20,13 +21,33 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
     // Calculate tiles that are visible to the rays
     let definition = 2.5;
     let line_length = 20.0 * 8.0;
-    let angles = player.get_player_rays(std::f32::consts::PI, line_length);
-    let visible_tiles = combine_hashsets(
-        angles
+    let direct_angles = player.get_player_rays(std::f32::consts::PI * 6.6 / 8.0, line_length * 6.6 / 8.0);
+    let peripheral_angles = player.get_player_rays(std::f32::consts::PI, line_length);
+    let peripheral_tiles = combine_hashsets(
+        peripheral_angles
             .iter()
-            .map(|&angle| find_visible_tiles(player.pos, angle, line_length / 8.0, definition))
-            .collect(),
+            .map(|&angle| find_visible_tiles(
+                player.pos,
+                angle,
+                line_length / 8.0 ,
+                definition,
+                Visibility::Peripheral
+            )
+        ).collect(),
     );
+    let visible_tiles = combine_hashsets(
+        direct_angles
+            .iter()
+            .map(|&angle| find_visible_tiles(
+                player.pos,
+                angle,
+                line_length / 8.0 * 6.6 / 8.0,
+                definition,
+                Visibility::Direct
+            )
+        ).collect(),
+    );
+    let visible_tiles = combine_hashsets(vec![visible_tiles, peripheral_tiles]);
 
     // Render 
     draw_tiles(tiles, assets, visible_tiles);
@@ -105,10 +126,9 @@ fn find_tiles(
 
 
 // Get tiles visible to a ray
-fn find_visible_tiles(origin: Vec2, angle: f32, length: f32, definition: f32) -> HashSet<(u16, u16, Visibility)> {
+fn find_visible_tiles(origin: Vec2, angle: f32, length: f32, definition: f32, visibility: Visibility) -> HashSet<(u16, u16, Visibility)> {
     let mut tiles = HashSet::new();
-    find_tiles(&mut tiles, angle, length, definition, origin, Visibility::Peripheral);
-    find_tiles(&mut tiles, angle , length * 7.0/8.0, definition, origin, Visibility::Direct);
+    find_tiles(&mut tiles, angle , length, definition, origin, visibility);
     tiles
 }
 

@@ -6,15 +6,22 @@ pub struct Player {
     pub vel: Vec2,
     pub health: f32,
     pub stamina: f32,
+    pub angle: f32,
+    
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
     pub clothes: PlayerClothes,
-    pub angle: f32,
+    pub gun: Gun,
 }
 
 pub enum PlayerClothes {
     Blue,
     Dark,
+}
+
+pub enum Gun {
+    SawedShotgun,
+    Sniper,
 }
 
 #[derive(PartialEq, Eq)]
@@ -53,6 +60,7 @@ impl Player {
             angle: 0.0,
             health: 100.0,
             clothes: PlayerClothes::Dark,
+            gun: Gun::Sniper,
         }
     }
 
@@ -207,17 +215,37 @@ impl Player {
 
 // Drawing logic
 impl Player {
+    fn draw_on_player(&self, texture: &Texture2D) {
+        const CENTER_OFFSET: f32 = 1.0 / 6.0;
+        draw_texture_ex(
+            texture,
+            self.pos.x - (17.0 * 1.3333333) / 2.0 + CENTER_OFFSET,
+            self.pos.y - (17.0 * 1.3333333) / 2.0 - CENTER_OFFSET,
+            WHITE,
+            DrawTextureParams {
+                rotation: self.angle, 
+                pivot: Some(self.pos),
+                dest_size: Some(Vec2::new(17.0 * 1.3333333, 17.0 * 1.3333333)),
+                ..Default::default()
+            },
+        );
+    }
+
     pub fn draw(&self, assets: &Assets) {
         const CENTER_OFFSET: f32 = 1.0 / 6.0;
+        // Get gun
+        let gun_texture = match self.gun {
+            Gun::SawedShotgun => match self.is_aiming() {
+                true => assets.get_texture("shotgun_aiming.png"),
+                false => assets.get_texture("shotgun_idle.png"),
+            },
+            Gun::Sniper => match self.is_aiming() {
+                true => assets.get_texture("sniper_aiming.png"),
+                false => assets.get_texture("sniper_idle.png"),
+            },
+        };
 
-        // Draw player shadow
-        draw_circle(
-            self.pos.x + CENTER_OFFSET + 0.3,
-            self.pos.y - CENTER_OFFSET + 0.3,
-            3.2,
-            Color::from_rgba(0, 0, 0, 70),
-        );
-
+        // Get player texture
         let player_texture = match self.is_aiming() {
             false => assets.get_texture(match self.clothes {
                 PlayerClothes::Blue => "player_blue.png",
@@ -229,33 +257,21 @@ impl Player {
             }),
         };
 
-        // Draw player
-        draw_texture_ex(
-            &player_texture,
-            self.pos.x - 17.0 / 2.0 + CENTER_OFFSET,
-            self.pos.y - 17.0 / 2.0 - CENTER_OFFSET,
-            WHITE,
-            DrawTextureParams {
-                rotation: self.angle, 
-                pivot: Some(self.pos),
-                dest_size: Some(Vec2::new(17.0, 17.0)),
-                ..Default::default()
-            },
+        // Get backpack texture
+        let backpack_texture = assets.get_texture("backpack.png");
+
+        // Draw player shadow
+        draw_circle(
+            self.pos.x + CENTER_OFFSET + 0.3,
+            self.pos.y - CENTER_OFFSET + 0.3,
+            3.2,
+            Color::from_rgba(0, 0, 0, 70),
         );
 
-        // Draw backpack
-        draw_texture_ex(
-            assets.get_texture("backpack.png"),
-            self.pos.x - 17.0 / 2.0 + CENTER_OFFSET,
-            self.pos.y - 17.0 / 2.0 - CENTER_OFFSET,
-            WHITE,
-            DrawTextureParams {
-                rotation: self.angle,
-                pivot: Some(self.pos),
-                dest_size: Some(Vec2::new(17.0, 17.0)),
-                ..Default::default()
-            },
-        );
+        // Draw entire player
+        self.draw_on_player(&gun_texture);
+        self.draw_on_player(&player_texture);
+        self.draw_on_player(&backpack_texture);
     }
 
     pub fn draw_hitbox(&self) {
