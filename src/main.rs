@@ -1,27 +1,30 @@
-use macroquad::{prelude::*, miniquad::conf::Icon};
-use camera::GameCamera;
 use assets::Assets;
-use player::Player;
+use camera::GameCamera;
 use entities::*;
-use ui::{render_ui, render_debug_ui};
+use macroquad::{miniquad::conf::Icon, prelude::*};
+use player::Player;
+use ui::{render_debug_ui, render_ui};
 use world::draw_world;
 
-mod maps;
-mod items;
-mod world;
-mod camera;
-mod player;
 mod assets;
+mod camera;
 mod entities;
-mod utils;
+mod items;
+mod maps;
+mod player;
 mod ui;
+mod utils;
+mod world;
 
 #[macroquad::main(conf)]
 async fn main() {
     let mut camera = GameCamera::new();
     let assets = Assets::new().await;
     let world = maps::example_world();
-    let mut dummy = Dummy { pos: vec2(2.2 * 8.0, 9.3 * 8.0), angle: 0.0 };
+    let mut dummy = Dummy {
+        pos: vec2(2.2 * 8.0, 9.3 * 8.0),
+        angle: 0.0,
+    };
     let mut debug_on = false;
 
     let mut player = Player::new();
@@ -48,14 +51,18 @@ async fn main() {
 
         // Draws example world
         draw_world(&world, &assets, &player);
-        if debug_on{player.draw_debug_rays()}
+        if debug_on {
+            player.draw_debug_rays()
+        }
 
         // Draw dummy
         dummy.draw(&assets, &player);
 
         // Draw player
         player.draw(&assets);
-        if debug_on{player.draw_hitbox()}
+        if debug_on {
+            player.draw_hitbox()
+        }
 
         // Bullets
         for bullet in &bullets {
@@ -67,7 +74,9 @@ async fn main() {
 
         // Rendering UI
         render_ui(&player);
-        if debug_on{render_debug_ui(&player, &camera);}
+        if debug_on {
+            render_debug_ui(&player, &camera);
+        }
         next_frame().await;
     }
 }
@@ -79,9 +88,9 @@ fn conf() -> Conf {
         window_height: 768,
         fullscreen: false,
         icon: Some(Icon {
-            small: [0;1024],
-            medium: [0;4096],
-            big: [0;16384],
+            small: [0; 1024],
+            medium: [0; 4096],
+            big: [0; 16384],
         }),
         ..Default::default()
     }

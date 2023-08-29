@@ -1,4 +1,4 @@
-use crate::{camera::GameCamera, Assets, utils::draw_rect, items::Item};
+use crate::{camera::GameCamera, items::Item, utils::draw_rect, Assets};
 use macroquad::prelude::*;
 
 pub struct Player {
@@ -7,13 +7,12 @@ pub struct Player {
     pub health: f32,
     pub stamina: f32,
     pub angle: f32,
-    
+
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
     pub clothes: Item::Clothes,
     pub gun: Item::Gun,
 }
-
 
 #[derive(PartialEq, Eq)]
 pub enum PlayerMovementState {
@@ -61,11 +60,11 @@ impl Player {
         self.handle_movement_state();
         self.handle_velocity();
         self.handle_stamina();
-        
+
         // TEMP FOR DEBUG
         self.handle_gun_controls();
         self.handle_clothes_controls();
-        
+
         // Apply
         self.apply_velocity();
         self.update_angle_to_mouse(camera);
@@ -148,7 +147,8 @@ impl Player {
         {
             self.stamina = (self.stamina - Player::STAMINA_COST * get_frame_time() * 60.0).max(0.0);
         } else if self.stamina < Player::MAX_STAMINA && !self.is_aiming() {
-            self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0).min(Player::MAX_STAMINA);
+            self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0)
+                .min(Player::MAX_STAMINA);
             if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
                 self.stamina_state = PlayerStaminaState::Normal;
             }
@@ -201,18 +201,19 @@ impl Player {
 
     pub fn get_player_rays(&self, fov: f32, line_length: f32) -> Vec<f32> {
         let ray_amount = {
-            let amount = (fov / 0.025 * line_length/80.0) as i32;
-            if amount % 2 == 0 { amount + 1 } else { amount }
+            let amount = (fov / 0.025 * line_length / 80.0) as i32;
+            if amount % 2 == 0 {
+                amount + 1
+            } else {
+                amount
+            }
         };
         let angle_increment = fov / ray_amount as f32;
-    
+
         // Get angles for rays that are evenly divided in the field of view
         let angles: Vec<f32> = (0..ray_amount)
             .map(|ray| {
-                self.angle
-                    + angle_increment * ray as f32
-                    - fov / 2.0
-                    + angle_increment / 2.0
+                self.angle + angle_increment * ray as f32 - fov / 2.0 + angle_increment / 2.0
             })
             .collect();
         angles
@@ -221,10 +222,10 @@ impl Player {
     pub fn get_hitbox(&self) -> Rect {
         let rect_size = 4.7;
         Rect {
-            x: self.pos.x - rect_size/2.0,
-            y: self.pos.y - rect_size/2.0,
+            x: self.pos.x - rect_size / 2.0,
+            y: self.pos.y - rect_size / 2.0,
             w: rect_size,
-            h: rect_size, 
+            h: rect_size,
         }
     }
 }
@@ -239,7 +240,7 @@ impl Player {
             self.pos.y - (17.0 * 1.3333333) / 2.0 - CENTER_OFFSET,
             WHITE,
             DrawTextureParams {
-                rotation: self.angle, 
+                rotation: self.angle,
                 pivot: Some(self.pos),
                 dest_size: Some(Vec2::new(17.0 * 1.3333333, 17.0 * 1.3333333)),
                 ..Default::default()
@@ -290,7 +291,7 @@ impl Player {
         let fov_direct_view_amount = 6.6 / 8.0;
         for angle in self.get_player_rays(std::f32::consts::PI, line_length) {
             draw_line(
-                self.pos.x, 
+                self.pos.x,
                 self.pos.y,
                 self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
                 self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
@@ -298,12 +299,21 @@ impl Player {
                 Color::new(0.75, 0.0, 0.0, 1.0),
             );
         }
-        for angle in self.get_player_rays(std::f32::consts::PI * fov_direct_view_amount, line_length * fov_direct_view_amount) {
+        for angle in self.get_player_rays(
+            std::f32::consts::PI * fov_direct_view_amount,
+            line_length * fov_direct_view_amount,
+        ) {
             draw_line(
-                self.pos.x, 
+                self.pos.x,
                 self.pos.y,
-                self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length * fov_direct_view_amount,
-                self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length * fov_direct_view_amount,
+                self.pos.x
+                    + (angle + std::f32::consts::FRAC_PI_2).cos()
+                        * line_length
+                        * fov_direct_view_amount,
+                self.pos.y
+                    + (angle + std::f32::consts::FRAC_PI_2).sin()
+                        * line_length
+                        * fov_direct_view_amount,
                 0.5,
                 RED,
             );

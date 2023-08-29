@@ -1,4 +1,4 @@
-use crate::{player::*, utils::is_windows, camera::GameCamera};
+use crate::{camera::GameCamera, player::*, utils::is_windows};
 use macroquad::prelude::*;
 
 fn draw_rect(rect: &Rect, color: Color) {
@@ -52,55 +52,60 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
     let text_size = 50.0;
     draw_text(
         "Debug Menu v0.1.2",
-        text_size/2.0,
-        text_size/2.0 * 1.0 + text_size/4.0 * 1.0, 
+        text_size / 2.0,
+        text_size / 2.0 * 1.0 + text_size / 4.0 * 1.0,
         text_size,
         WHITE,
     );
     draw_text(
         &format!("FPS: {}", &get_fps().to_string()),
-        text_size/2.0,
-        text_size/2.0 * 2.0 + text_size/4.0 * 2.0, 
+        text_size / 2.0,
+        text_size / 2.0 * 2.0 + text_size / 4.0 * 2.0,
         text_size,
         WHITE,
     );
     draw_text(
-        &format!("OS: {}",match is_windows() {
-            true => "Windows",
-            false => "Linux",
-        }),
-        text_size/2.0,
-        text_size/2.0 * 3.0 + text_size/4.0 * 3.0, 
+        &format!(
+            "OS: {}",
+            match is_windows() {
+                true => "Windows",
+                false => "Linux",
+            }
+        ),
+        text_size / 2.0,
+        text_size / 2.0 * 3.0 + text_size / 4.0 * 3.0,
         text_size,
         WHITE,
     );
     draw_text(
         &format!("Health: {}", player.health),
-        text_size/2.0,
-        text_size/2.0 * 4.0 + text_size/4.0 * 4.0, 
+        text_size / 2.0,
+        text_size / 2.0 * 4.0 + text_size / 4.0 * 4.0,
         text_size,
         WHITE,
     );
     draw_text(
         &format!("Stamina: {}", player.stamina),
-        text_size/2.0,
-        text_size/2.0 * 5.0 + text_size/4.0 * 5.0, 
+        text_size / 2.0,
+        text_size / 2.0 * 5.0 + text_size / 4.0 * 5.0,
         text_size,
         WHITE,
     );
     draw_text(
-        &format!("Player Pos: {}", (player.pos/8.0).floor() ),
-        text_size/2.0,
-        text_size/2.0 * 6.0 + text_size/4.0 * 6.0, 
+        &format!("Player Pos: {}", (player.pos / 8.0).floor()),
+        text_size / 2.0,
+        text_size / 2.0 * 6.0 + text_size / 4.0 * 6.0,
         text_size,
         WHITE,
     );
     draw_text(
-        &format!("Aiming at: {}", (camera.screen_to_world(mouse_position().into())/8.0).floor() ),
-        text_size/2.0,
-        text_size/2.0 * 7.0 + text_size/4.0 * 7.0, 
+        &format!(
+            "Aiming at: {}",
+            (camera.screen_to_world(mouse_position().into()) / 8.0).floor()
+        ),
+        text_size / 2.0,
+        text_size / 2.0 * 7.0 + text_size / 4.0 * 7.0,
         text_size,
         WHITE,
     );
 }
-

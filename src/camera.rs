@@ -20,11 +20,12 @@ impl GameCamera {
     }
 
     pub fn handle_controls(&mut self) {
-
-        #[cfg(target_os = "linux")] {
+        #[cfg(target_os = "linux")]
+        {
             self.target_zoom *= mouse_wheel().1 / 10.0 + 1.0;
         }
-        #[cfg(target_os = "windows")] {
+        #[cfg(target_os = "windows")]
+        {
             self.target_zoom *= mouse_wheel().1 / 1200.0 + 1.0;
         }
 
