@@ -185,7 +185,7 @@ impl Player {
 
     pub fn get_player_rays(&self, fov: f32, line_length: f32) -> Vec<f32> {
         let ray_amount = {
-            let amount = (fov / 0.02 * line_length/80.0) as i32;
+            let amount = (fov / 0.025 * line_length/80.0) as i32;
             if amount % 2 == 0 { amount + 1 } else { amount }
         };
         let angle_increment = fov / ray_amount as f32;

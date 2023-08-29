@@ -2,6 +2,10 @@ use std::collections::HashSet;
 use macroquad::prelude::*;
 use crate::{assets::Assets, player::Player};
 
+const RAY_DEFINITION: f32 = 2.1;
+const LINE_LENGTH: f32 = 20.0 * 8.0;
+const ANGLE_PERIPHERAL_FACTOR: f32 = 6.6/8.0;
+
 
 #[derive(Eq, PartialEq, Hash, Clone)]
 enum Visibility {
@@ -19,18 +23,16 @@ pub struct TileMap {
 pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
     
     // Calculate tiles that are visible to the rays
-    let definition = 2.5;
-    let line_length = 20.0 * 8.0;
-    let direct_angles = player.get_player_rays(std::f32::consts::PI * 6.6 / 8.0, line_length * 6.6 / 8.0);
-    let peripheral_angles = player.get_player_rays(std::f32::consts::PI, line_length);
+    let direct_angles = player.get_player_rays(std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR, LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR);
+    let peripheral_angles = player.get_player_rays(std::f32::consts::PI, LINE_LENGTH);
+
     let peripheral_tiles = combine_hashsets(
         peripheral_angles
             .iter()
             .map(|&angle| find_visible_tiles(
                 player.pos,
                 angle,
-                line_length / 8.0 ,
-                definition,
+                LINE_LENGTH / 8.0,
                 Visibility::Peripheral
             )
         ).collect(),
@@ -41,8 +43,7 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
             .map(|&angle| find_visible_tiles(
                 player.pos,
                 angle,
-                line_length / 8.0 * 6.6 / 8.0,
-                definition,
+                LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
                 Visibility::Direct
             )
         ).collect(),
@@ -64,14 +65,18 @@ fn hashet_contains(grid_pos: (u16, u16), hashset: &HashSet<(u16, u16, Visibility
 }
 
 fn draw_tiles(tiles: &TileMap, assets: &Assets,visible_tiles: HashSet<(u16, u16, Visibility)>) {
+    const FIT_OFFSET: f32 = 0.25;
+    const PERIPHERAL_TILE_COLOR: Color = Color::new(0.9, 0.9, 0.9, 1.0);
+    const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
+
+
     for (tiles_index, tile) in tiles.data.iter().enumerate() {
-        let fit_offset = 0.25;
         let grid_x = tiles_index as u16 % tiles.width;
         let grid_y = tiles_index as u16 / tiles.width;
         let color = match hashet_contains((grid_x, grid_y), &visible_tiles) {
             Visibility::Direct => WHITE,
-            Visibility::Peripheral => Color::new(0.9, 0.9, 0.9, 1.0),
-            Visibility::NotVisible => Color::new(0.8, 0.8, 0.8, 1.0)
+            Visibility::Peripheral => PERIPHERAL_TILE_COLOR,
+            Visibility::NotVisible => NOT_VISIBLE_TILE_COLOR,
         };
         draw_texture_ex(
             assets.get_texture("tiles.png"),
@@ -80,10 +85,10 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets,visible_tiles: HashSet<(u16, u16,
             color, // Make into shadow render later
             DrawTextureParams {
                 source: Some(Rect::new(
-                    ((tile - 1) % 8) as f32 * 8.0 + fit_offset/2.0,
-                    ((tile - 1) / 8) as f32 * 8.0 + fit_offset/2.0,
-                    8.0 - fit_offset,
-                    8.0 - fit_offset)
+                    ((tile - 1) % 8) as f32 * 8.0 + FIT_OFFSET /2.0,
+                    ((tile - 1) / 8) as f32 * 8.0 + FIT_OFFSET /2.0,
+                    8.0 - FIT_OFFSET,
+                    8.0 - FIT_OFFSET)
                 ),
                 dest_size: Some(Vec2::new(8.0, 8.0)),
                 ..Default::default()
@@ -96,15 +101,14 @@ fn find_tiles(
     tiles: &mut HashSet<(u16, u16, Visibility)>,
     angle: f32,
     length: f32,
-    definition: f32, 
     origin: Vec2,
     visibility: Visibility,
 ) {
     let angle = angle + std::f32::consts::FRAC_PI_2;
     
     let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
-    let (dx, dy) = (angle.cos() / definition, angle.sin() / definition);
-    let loop_count = (length * definition) as i32;
+    let (dx, dy) = (angle.cos() / RAY_DEFINITION, angle.sin() / RAY_DEFINITION);
+    let loop_count = (length * RAY_DEFINITION) as i32;
 
     // Find tiles that are in direct view
     for _ in 0..loop_count {
@@ -126,9 +130,9 @@ fn find_tiles(
 
 
 // Get tiles visible to a ray
-fn find_visible_tiles(origin: Vec2, angle: f32, length: f32, definition: f32, visibility: Visibility) -> HashSet<(u16, u16, Visibility)> {
+fn find_visible_tiles(origin: Vec2, angle: f32, length: f32,  visibility: Visibility) -> HashSet<(u16, u16, Visibility)> {
     let mut tiles = HashSet::new();
-    find_tiles(&mut tiles, angle , length, definition, origin, visibility);
+    find_tiles(&mut tiles, angle , length, origin, visibility);
     tiles
 }
 
