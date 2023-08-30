@@ -1,4 +1,8 @@
-use crate::{assets::Assets, camera::GameCamera, player::Player};
+use crate::{
+    assets::Assets,
+    camera::GameCamera,
+    player::Player
+};
 use macroquad::{
     audio::{play_sound, PlaySoundParams},
     prelude::*,
@@ -50,7 +54,7 @@ pub fn handle_shooting(
     }
 
     for bullet in &mut *bullets {
-        let drag = 0.15;
+        let drag = 0.15 * get_frame_time() * 60.0;
         if bullet.vel >= 0.0 {
             bullet.vel -= drag;
             bullet.vel = bullet.vel.max(0.0);

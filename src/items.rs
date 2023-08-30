@@ -19,8 +19,8 @@ pub mod Item {
             Gun {
                 name: "sawed_shotgun",
                 bullet_speed: 6.5,
-                bullet_spread: 0.15,
-                bullets_per_shot: 8,
+                bullet_spread: 0.125,
+                bullets_per_shot: 12,
             }
         }
 
