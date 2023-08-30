@@ -31,11 +31,6 @@ async fn main() {
     player.pos = Vec2::new(60.0, 50.0);
     camera.target = player.pos;
 
-    let img = load_image("assets/temp/error.png").await.unwrap();
-
-    for byte in img.bytes {
-        print!("{},", byte);
-    }
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
     loop {
