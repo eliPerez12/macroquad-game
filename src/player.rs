@@ -1,13 +1,10 @@
-use macroquad::prelude::*;
+use std::f32::consts::FRAC_PI_2;
+
 use crate::{
-    camera::GameCamera,
-    items::Item,
-    utils::draw_rect,
-    Assets,
-    world::LINE_LENGTH,
-    world::RAY_AMOUNT,
-    world::ANGLE_PERIPHERAL_FACTOR,
+    camera::GameCamera, items::Item, utils::draw_rect, world::ANGLE_PERIPHERAL_FACTOR,
+    world::LINE_LENGTH, world::RAY_AMOUNT, Assets,
 };
+use macroquad::prelude::*;
 
 pub struct Player {
     pub pos: Vec2,
@@ -86,7 +83,6 @@ impl Player {
             self.gun = Item::Gun::sniper()
         }
     }
-
 
     fn handle_clothes_controls(&mut self) {
         if is_key_pressed(KeyCode::Key3) {
@@ -222,7 +218,9 @@ impl Player {
         // Get angles for rays that are evenly divided in the field of view
         let angles: Vec<f32> = (0..ray_amount)
             .map(|ray| {
-                self.angle + angle_increment * ray as f32 - fov / 2.0 + angle_increment / 2.0
+                self.angle + angle_increment * ray as f32 - fov / 2.0
+                    + angle_increment / 2.0
+                    + FRAC_PI_2
             })
             .collect();
         angles
@@ -303,22 +301,11 @@ impl Player {
             draw_line(
                 self.pos.x,
                 self.pos.y,
-                self.pos.x
-                    + (angle + std::f32::consts::FRAC_PI_2).cos()
-                        * LINE_LENGTH
-                        * ANGLE_PERIPHERAL_FACTOR,
-                self.pos.y
-                    + (angle + std::f32::consts::FRAC_PI_2).sin()
-                        * LINE_LENGTH
-                        * ANGLE_PERIPHERAL_FACTOR,
+                self.pos.x + angle.cos() * LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
+                self.pos.y + angle.sin() * LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
                 0.5,
                 RED,
             );
         }
     }
 }
-
-
-
-
-

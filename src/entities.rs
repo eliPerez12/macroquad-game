@@ -1,8 +1,4 @@
-use crate::{
-    assets::Assets,
-    camera::GameCamera,
-    player::Player
-};
+use crate::{assets::Assets, camera::GameCamera, player::Player};
 use macroquad::{
     audio::{play_sound, PlaySoundParams},
     prelude::*,

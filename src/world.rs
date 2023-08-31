@@ -2,10 +2,9 @@ use crate::{assets::Assets, player::Player};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
-pub const RAY_DEFINITION: f32 = 10.0;
 pub const LINE_LENGTH: f32 = 20.0 * 8.0;
 pub const ANGLE_PERIPHERAL_FACTOR: f32 = 7.2 / 8.0;
-pub const RAY_AMOUNT: f32 = 1.5;
+pub const RAY_AMOUNT: f32 = 8.0;
 
 pub struct TileMap {
     pub data: Vec<u8>,
@@ -22,20 +21,18 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
     let mut visible_tiles = HashSet::new();
 
     for angle in direct_angles {
-        visible_tiles.extend(
-            find_tiles(
-                angle,
-                LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
-                player.pos,
-                tiles
-            )
-        )
+        visible_tiles.extend(find_tiles(
+            angle,
+            LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
+            player.pos,
+            tiles,
+        ));
     }
 
     // Render
     draw_tiles(tiles, assets, visible_tiles);
-}
 
+}
 
 fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
     const FIT_OFFSET: f32 = 0.25;
@@ -66,48 +63,66 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16
         );
     }
 }
-
 fn find_tiles(
     angle: f32,
     length: f32,
     origin: Vec2,
     tile_map: &TileMap,
 ) -> HashSet<(u16, u16)> {
-    let angle = angle + std::f32::consts::FRAC_PI_2;
-    let mut tiles = HashSet::new();
-    let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
-    let (dx, dy) = (angle.cos() / RAY_DEFINITION, angle.sin() / RAY_DEFINITION);
-    let loop_count = (length * RAY_DEFINITION) as i32;
 
-    // Find tiles that are in direct view
-    for _ in 0..loop_count {
-        let tile_x = {
-            let x = x.floor();
-            if (x < 0.0) || (x as u16 >= tile_map.width){
-                continue;
-            } else {
-                x as u16
-            }
-        };
-        let tile_y = {
-            let y = y.floor();
-            if (y < 0.0) || (y as u16 >= tile_map.height){
-                continue;
-            } else {
-                y as u16
-            }
-        };
-        let index = {tile_x + tile_y * tile_map.width} as usize;
-        if index > {tile_map.width * tile_map.height} as usize {
-            continue;
-        }
-        let tile = tile_map.data[{index} as usize];
-        if tile == 2 {
-            continue;
-        }
-        tiles.insert((tile_x, tile_y));
-        x += dx;
-        y += dy;
+    let mut tiles = HashSet::new();
+
+    let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
+    let dx = angle.cos();
+    let dy = angle.sin();
+
+    let delta_dist_x = (1.0 / dx).abs();
+    let delta_dist_y = (1.0 / dy).abs();
+
+    let mut step_x = 1;
+    let mut step_y = 1;
+    let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
+    let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
+
+    if dx < 0.0 {
+        step_x = -1;
+        side_dist_x = (x - x.floor()) * delta_dist_x;
     }
+
+    if dy < 0.0 {
+        step_y = -1;
+        side_dist_y = (y - y.floor()) * delta_dist_y;
+    }
+
+    let mut reached_length = 0.0;
+
+    while reached_length < length {
+        // Check for intersection in the current cell
+
+        if x < 0.0 || y < 0.0 {return tiles};
+
+        let tile_x = x.floor() as u16;
+        let tile_y = y.floor() as u16;
+
+        if tile_x < tile_map.width && tile_y < tile_map.height {
+            let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
+            tiles.insert((tile_x, tile_y));
+            if tile == 2 {
+                return tiles; // Stop ray casting if ray hits somthing
+            } 
+        }
+
+        // Move to the next cell
+        if side_dist_x < side_dist_y {
+            side_dist_x += delta_dist_x;
+            x += step_x as f32;
+            reached_length = side_dist_x;
+        } else {
+            side_dist_y += delta_dist_y;
+            y += step_y as f32;
+            reached_length = side_dist_y;
+        }
+    }
+
     tiles
 }

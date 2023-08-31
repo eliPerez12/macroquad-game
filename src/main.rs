@@ -51,15 +51,14 @@ async fn main() {
 
         // Draws example world
         draw_world(&world, &assets, &player);
-        if debug_on {
-            player._draw_debug_rays()
-        }
 
         // Draw dummy
         dummy.draw(&assets, &player);
 
         // Draw player
         player.draw(&assets);
+        if debug_on {
+        }
         if debug_on {
             player.draw_hitbox()
         }
