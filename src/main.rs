@@ -52,7 +52,7 @@ async fn main() {
         // Draws example world
         draw_world(&world, &assets, &player);
         if debug_on {
-            player.draw_debug_rays()
+            player._draw_debug_rays()
         }
 
         // Draw dummy

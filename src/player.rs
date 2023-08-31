@@ -1,5 +1,13 @@
-use crate::{camera::GameCamera, items::Item, utils::draw_rect, Assets};
 use macroquad::prelude::*;
+use crate::{
+    camera::GameCamera,
+    items::Item,
+    utils::draw_rect,
+    Assets,
+    world::LINE_LENGTH,
+    world::RAY_AMOUNT,
+    world::ANGLE_PERIPHERAL_FACTOR,
+};
 
 pub struct Player {
     pub pos: Vec2,
@@ -78,6 +86,7 @@ impl Player {
             self.gun = Item::Gun::sniper()
         }
     }
+
 
     fn handle_clothes_controls(&mut self) {
         if is_key_pressed(KeyCode::Key3) {
@@ -201,7 +210,7 @@ impl Player {
 
     pub fn get_player_rays(&self, fov: f32, line_length: f32) -> Vec<f32> {
         let ray_amount = {
-            let amount = (fov / 0.025 * line_length / 80.0) as i32;
+            let amount = (fov * line_length * RAY_AMOUNT) as i32;
             if amount % 2 == 0 {
                 amount + 1
             } else {
@@ -286,37 +295,30 @@ impl Player {
         draw_rect(self.get_hitbox(), Color::new(0.0, 1.0, 0.0, 0.8))
     }
 
-    pub fn draw_debug_rays(&self) {
-        let line_length = 20.0 * 8.0;
-        let fov_direct_view_amount = 6.6 / 8.0;
-        for angle in self.get_player_rays(std::f32::consts::PI, line_length) {
-            draw_line(
-                self.pos.x,
-                self.pos.y,
-                self.pos.x + (angle + std::f32::consts::FRAC_PI_2).cos() * line_length,
-                self.pos.y + (angle + std::f32::consts::FRAC_PI_2).sin() * line_length,
-                0.5,
-                Color::new(0.75, 0.0, 0.0, 1.0),
-            );
-        }
+    pub fn _draw_debug_rays(&self) {
         for angle in self.get_player_rays(
-            std::f32::consts::PI * fov_direct_view_amount,
-            line_length * fov_direct_view_amount,
+            std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR,
+            LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
         ) {
             draw_line(
                 self.pos.x,
                 self.pos.y,
                 self.pos.x
                     + (angle + std::f32::consts::FRAC_PI_2).cos()
-                        * line_length
-                        * fov_direct_view_amount,
+                        * LINE_LENGTH
+                        * ANGLE_PERIPHERAL_FACTOR,
                 self.pos.y
                     + (angle + std::f32::consts::FRAC_PI_2).sin()
-                        * line_length
-                        * fov_direct_view_amount,
+                        * LINE_LENGTH
+                        * ANGLE_PERIPHERAL_FACTOR,
                 0.5,
                 RED,
             );
         }
     }
 }
+
+
+
+
+
