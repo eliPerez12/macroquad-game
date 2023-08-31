@@ -25,13 +25,13 @@ pub fn render_ui(player: &Player) {
     };
 
     let filled_health_bar = {
-        let mut filled_bar = health_bar.clone();
+        let mut filled_bar = health_bar;
         filled_bar.w = player.health * filled_bar.w / 100.0;
         filled_bar
     };
 
     let filled_stamina_bar = {
-        let mut filled_bar = stamina_bar.clone();
+        let mut filled_bar = stamina_bar;
         filled_bar.w = player.stamina * filled_bar.w / 100.0;
         filled_bar
     };

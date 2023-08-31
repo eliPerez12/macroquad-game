@@ -23,6 +23,7 @@ fn find_tiles(
     tile_map: &TileMap,
 ) -> HashSet<(u16, u16)> {
     let mut tiles = HashSet::new();
+    let mut ray_end_points: Vec<Vec2> = vec![];
 
     for angle in angles {
         let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
@@ -52,8 +53,9 @@ fn find_tiles(
 
         // Keep shooting ray until it reaches a collider or the end of the length
         while reached_length < length && keep_casting_ray {
-            if x < 0.0 || y < 0.0 {
+            if x < 0.0 || y < 0.0 || x > tile_map.width as f32 * 8.0 || y > tile_map.height as f32 * 8.0 {
                 keep_casting_ray = false;
+                ray_end_points.push(Vec2::new(x, y));
                 continue;
             };
 
@@ -62,7 +64,7 @@ fn find_tiles(
 
             if tile_x < tile_map.width && tile_y < tile_map.height {
                 let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
-                if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] == true {
+                if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
                     keep_casting_ray = false;
                     continue;
                 }

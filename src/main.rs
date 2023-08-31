@@ -46,7 +46,7 @@ async fn main() {
         }
 
         // Draw in world space
-        set_camera(&mut camera);
+        set_camera(&camera);
         // clear_background(Color::from_rgba(89, 103, 48 , 255));
         
 
@@ -60,7 +60,7 @@ async fn main() {
         player.draw(&assets);
 
         if debug_on {
-            //DSDplayer._draw_debug_rays();
+            // player._draw_debug_rays();
             player.draw_hitbox();
         }
 

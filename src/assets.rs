@@ -14,9 +14,9 @@ pub struct Assets {
 impl Assets {
     pub fn get_texture(&self, texture: &str) -> Texture2D {
         if let Some(texture) = self.textures.get(texture) {
-            return texture.to_owned();
+            texture.to_owned()
         } else {
-            return error_texture();
+            error_texture()
         }
     }
 
@@ -47,8 +47,8 @@ impl Assets {
                     // Images
                     if path_str.ends_with(".png") {
                         let key_path_str = match is_windows() {
-                            true => path_str.split("\\").last().unwrap(),
-                            false => path_str.split("/").last().unwrap(),
+                            true => path_str.split('\\').last().unwrap(),
+                            false => path_str.split('/').last().unwrap(),
                         };
                         textures.insert(
                             key_path_str.to_string(),
@@ -58,8 +58,8 @@ impl Assets {
                     // Sounds
                     if path_str.ends_with(".wav") {
                         let key_path_str = match is_windows() {
-                            true => path_str.split("\\").last().unwrap(),
-                            false => path_str.split("/").last().unwrap(),
+                            true => path_str.split('\\').last().unwrap(),
+                            false => path_str.split('/').last().unwrap(),
                         };
                         let sound = load_sound(&path_str).await.unwrap();
                         sounds.insert(key_path_str.to_string(), sound);
@@ -111,12 +111,12 @@ impl Assets {
     }
 
     async fn load_bitmap(path: &str) -> DynamicImage {
-        let dyn_image = image::load_from_memory(&{
-            let file = load_file(path).await.unwrap();
-            file
+        
+        image::load_from_memory(&{
+            
+            load_file(path).await.unwrap()
         })
-        .unwrap();
-        dyn_image
+        .unwrap()
     }
 
     async fn insert_clothes_pair(
