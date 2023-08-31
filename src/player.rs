@@ -35,7 +35,7 @@ pub enum PlayerStaminaState {
 // Movement Logic
 impl Player {
     const MAX_STAMINA: f32 = 100.0;
-    const MIN_STAMINA_FOR_SPRINTING: f32 = 15.0;
+    const MIN_STAMINA_FOR_SPRINTING: f32 = 10.0;
 
     const SPRINTING_VELOCITY: f32 = 0.40;
     const WALKING_VELOCITY: f32 = 0.25;
@@ -43,7 +43,8 @@ impl Player {
     const PLAYER_DEACC: f32 = 0.05; // Deacceleration
 
     const STAMINA_REGEN: f32 = 0.07;
-    const STAMINA_COST: f32 = 0.235;
+    const STAMINA_COST: f32 = 0.2;
+    const STAMINA_AIMING_COST: f32 = 0.1;
 
     pub fn new() -> Player {
         Player {
@@ -143,20 +144,27 @@ impl Player {
 
     // Handles stamina regeneration, recovery and depletion
     fn handle_stamina(&mut self) {
-        if self.movement_state == PlayerMovementState::Sprinting && self.stamina <= 0.0 {
-            // Enter recovering stamina state
-            self.stamina_state = PlayerStaminaState::Recovering
-        }
+        // Regular spriting cost
         if self.movement_state == PlayerMovementState::Sprinting
             && self.stamina_state == PlayerStaminaState::Normal
         {
-            self.stamina = (self.stamina - Player::STAMINA_COST * get_frame_time() * 60.0).max(0.0);
-        } else if self.stamina < Player::MAX_STAMINA && !self.is_aiming() {
-            self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0)
-                .min(Player::MAX_STAMINA);
-            if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
-                self.stamina_state = PlayerStaminaState::Normal;
-            }
+            self.stamina = (self.stamina - Player::STAMINA_COST * get_frame_time() * 60.0).max(0.0); // Deplete stamina for running
+        }
+        if self.is_aiming() {
+            self.stamina =
+                (self.stamina - Player::STAMINA_AIMING_COST * get_frame_time() * 60.0).max(0.0);
+        }
+        // Enter recovering stamina state
+        if self.stamina <= 0.0 {
+            self.stamina_state = PlayerStaminaState::Recovering
+        }
+        // Regen stamina
+        
+        self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0)
+            .min(Player::MAX_STAMINA);
+
+        if self.stamina >= Player::MIN_STAMINA_FOR_SPRINTING {
+            self.stamina_state = PlayerStaminaState::Normal;
         }
     }
 

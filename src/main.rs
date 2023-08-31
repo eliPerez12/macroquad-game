@@ -57,10 +57,10 @@ async fn main() {
 
         // Draw player
         player.draw(&assets);
+
         if debug_on {
-        }
-        if debug_on {
-            player.draw_hitbox()
+            //DSDplayer._draw_debug_rays();
+            player.draw_hitbox();
         }
 
         // Bullets
