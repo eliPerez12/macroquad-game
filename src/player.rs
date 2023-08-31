@@ -2,7 +2,7 @@ use std::f32::consts::FRAC_PI_2;
 
 use crate::{
     camera::GameCamera, items::Item, utils::draw_rect, world::ANGLE_PERIPHERAL_FACTOR,
-    world::LINE_LENGTH, world::RAY_AMOUNT, Assets,
+    world::{LINE_LENGTH, TileMap}, world::RAY_AMOUNT, Assets, maps::TILE_COLLIDER_LOOKUP,
 };
 use macroquad::prelude::*;
 
@@ -61,9 +61,10 @@ impl Player {
     }
 
     // Function to handle player movements
-    pub fn handle_player_movements(&mut self, camera: &GameCamera) {
+    pub fn handle_player_movements(&mut self, camera: &GameCamera, tile_map: &TileMap) {
         // Update
         self.handle_movement_state();
+        self.handle_collisions(&tile_map);
         self.handle_velocity();
         self.handle_stamina();
 
@@ -177,6 +178,23 @@ impl Player {
                 _ => PlayerMovementState::Idle,
             }
         }
+    }
+
+    fn handle_collisions(&mut self, tile_map: &TileMap) {
+        let player_hitbox = self.get_hitbox();
+        for (index, tile) in tile_map.data.iter().enumerate() {
+            if !TILE_COLLIDER_LOOKUP[(*tile -1 )as usize] { // If tile isnt collible, skip
+                continue
+            };
+
+            let tile_x = (index as f32 % tile_map.width as f32) * 8.0;
+            let tile_y = index as f32 / tile_map.width as f32 * 8.0;
+            let tile_rect = Rect::new(tile_x as f32, tile_y as f32, 8.0, 8.0);
+
+            if player_hitbox.intersect(tile_rect).is_some() {
+                dbg!("COLLIDED");
+            }
+        }   
     }
 
     fn apply_velocity(&mut self) {

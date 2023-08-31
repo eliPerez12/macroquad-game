@@ -8,61 +8,12 @@ pub const ANGLE_PERIPHERAL_FACTOR: f32 = 7.2 / 8.0;
 #[cfg(debug_assertions)]
 pub const RAY_AMOUNT: f32 = 7.5;
 #[cfg(not(debug_assertions))]
-pub const RAY_AMOUNT: f32 = 15.0;
+pub const RAY_AMOUNT: f32 = 17.5;
 
 pub struct TileMap {
     pub data: Vec<u8>,
     pub width: u16,
     pub height: u16,
-}
-
-pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
-    // Calculate tiles that are visible to the rays
-    let angles = player.get_player_rays(
-        std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR,
-        LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
-    );
-    let visible_tiles = find_tiles(
-        angles,
-        LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
-        player.pos,
-        tiles,
-    );
-
-    // Render
-    draw_tiles(tiles, assets, visible_tiles);
-}
-
-fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
-    const FIT_OFFSET: f32 = 0.25;
-    const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
-
-    for (tiles_index, tile) in tiles.data.iter().enumerate() {
-        let grid_x = tiles_index as u16 % tiles.width;
-        let grid_y = tiles_index as u16 / tiles.width;
-        let is_collider = TILE_COLLIDER_LOOKUP
-            [{ tiles.data[{ grid_x + grid_y * tiles.width } as usize] - 1 } as usize];
-        let color = match visible_tiles.contains(&(grid_x, grid_y)) || is_collider {
-            true => WHITE,
-            false => NOT_VISIBLE_TILE_COLOR,
-        };
-        draw_texture_ex(
-            &assets.get_texture("tiles.png"),
-            grid_x as f32 * 8.0,
-            grid_y as f32 * 8.0,
-            color, // Make into shadow render later
-            DrawTextureParams {
-                source: Some(Rect::new(
-                    ((tile - 1) % 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
-                    ((tile - 1) / 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
-                    8.0 - FIT_OFFSET,
-                    8.0 - FIT_OFFSET,
-                )),
-                dest_size: Some(Vec2::new(8.0, 8.0)),
-                ..Default::default()
-            },
-        );
-    }
 }
 
 fn find_tiles(
@@ -131,4 +82,54 @@ fn find_tiles(
         }
     }
     tiles
+}
+
+pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
+    // Calculate tiles that are visible to the rays
+    let angles = player.get_player_rays(
+        std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR,
+        LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
+    );
+    let visible_tiles = find_tiles(
+        angles,
+        LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
+        player.pos,
+        tiles,
+    );
+
+    // Render
+    draw_tiles(tiles, assets, visible_tiles);
+}
+
+
+fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
+    const FIT_OFFSET: f32 = 0.25;
+    const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.84, 0.84, 0.84, 1.0);
+
+    for (tiles_index, tile) in tiles.data.iter().enumerate() {
+        let grid_x = tiles_index as u16 % tiles.width;
+        let grid_y = tiles_index as u16 / tiles.width;
+        let is_collider = TILE_COLLIDER_LOOKUP
+            [{ tiles.data[{ grid_x + grid_y * tiles.width } as usize] - 1 } as usize];
+        let color = match visible_tiles.contains(&(grid_x, grid_y)) || is_collider {
+            true => WHITE,
+            false => NOT_VISIBLE_TILE_COLOR,
+        };
+        draw_texture_ex(
+            &assets.get_texture("tiles.png"),
+            grid_x as f32 * 8.0,
+            grid_y as f32 * 8.0,
+            color, // Make into shadow render later
+            DrawTextureParams {
+                source: Some(Rect::new(
+                    ((tile - 1) % 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
+                    ((tile - 1) / 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
+                    8.0 - FIT_OFFSET,
+                    8.0 - FIT_OFFSET,
+                )),
+                dest_size: Some(Vec2::new(8.0, 8.0)),
+                ..Default::default()
+            },
+        );
+    }
 }

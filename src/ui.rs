@@ -78,14 +78,14 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
         WHITE,
     );
     draw_text(
-        &format!("Health: {}", player.health),
+        &format!("Health: {}", player.health.round()),
         text_size / 2.0,
         text_size / 2.0 * 4.0 + text_size / 4.0 * 4.0,
         text_size,
         WHITE,
     );
     draw_text(
-        &format!("Stamina: {}", player.stamina),
+        &format!("Stamina: {}", player.stamina.round()),
         text_size / 2.0,
         text_size / 2.0 * 5.0 + text_size / 4.0 * 5.0,
         text_size,

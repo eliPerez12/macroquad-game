@@ -35,7 +35,7 @@ async fn main() {
     // Main game loop
     loop {
         // Update Game
-        player.handle_player_movements(&camera);
+        player.handle_player_movements(&camera, &world);
         handle_shooting(&mut bullets, &assets, &player, &camera);
         dummy.turn_to_face(&camera, player.pos);
         camera.handle_controls();
@@ -47,7 +47,8 @@ async fn main() {
 
         // Draw in world space
         set_camera(&mut camera);
-        clear_background(BLACK);
+        // clear_background(Color::from_rgba(89, 103, 48 , 255));
+        
 
         // Draws example world
         draw_world(&world, &assets, &player);
