@@ -1,9 +1,9 @@
-use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::draw_rect};
+use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::draw_rect, camera::GameCamera};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
-pub const LINE_LENGTH: f32 = 20.0 * 8.0;
-pub const ANGLE_PERIPHERAL_FACTOR: f32 = 7.2 / 8.0;
+pub const LINE_LENGTH: f32 = 25.0 * 8.0;
+pub const ANGLE_PERIPHERAL_FACTOR: f32 = 8.0 / 8.0;
 
 #[cfg(debug_assertions)]
 pub const RAY_AMOUNT: f32 = 7.5;
@@ -54,12 +54,14 @@ fn find_tiles(
     length: f32,
     origin: Vec2,
     tile_map: &TileMap,
+    camera: &GameCamera,
 ) -> HashSet<(u16, u16)> {
     let mut tiles = HashSet::new();
-    let mut ray_end_points: Vec<Vec2> = vec![];
+    let _visible_to_camera = camera.get_visible_tiles();
 
     for angle in angles {
         let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
+
         let dx = angle.cos();
         let dy = angle.sin();
 
@@ -82,18 +84,15 @@ fn find_tiles(
         }
 
         let mut reached_length = 0.0;
-        let mut keep_casting_ray = true;
 
         // Keep shooting ray until it reaches a collider or the end of the length
-        while reached_length < length && keep_casting_ray {
+        while reached_length < length {
             if x < 0.0
                 || y < 0.0
                 || x > tile_map.width as f32 * 8.0
                 || y > tile_map.height as f32 * 8.0
             {
-                keep_casting_ray = false;
-                ray_end_points.push(Vec2::new(x, y));
-                continue;
+                break;
             };
 
             let tile_x = x.floor() as u16;
@@ -101,11 +100,10 @@ fn find_tiles(
 
             if tile_x < tile_map.width && tile_y < tile_map.height {
                 let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
-                if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
-                    keep_casting_ray = false;
-                    continue;
-                }
                 tiles.insert((tile_x, tile_y));
+                if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
+                    break;
+                }
             }
 
             // Move to the next cell
@@ -123,7 +121,7 @@ fn find_tiles(
     tiles
 }
 
-pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
+pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player, camera: &GameCamera) {
     // Calculate tiles that are visible to the rays
     let angles = player.get_player_rays(
         std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR,
@@ -134,29 +132,29 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
         LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
         player.pos,
         tiles,
+        &camera
     );
 
     // Render
-    draw_tiles(tiles, assets, visible_tiles);
+    draw_tiles(tiles, assets, visible_tiles, &camera);
 }
 
-fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
+fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_to_player: HashSet<(u16, u16)>, camera: &GameCamera) {
     const FIT_OFFSET: f32 = 0.25;
     const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.84, 0.84, 0.84, 1.0);
 
-    for (tiles_index, tile) in tiles.data.iter().enumerate() {
-        let grid_x = tiles_index as u16 % tiles.width;
-        let grid_y = tiles_index as u16 / tiles.width;
-        let is_collider = TILE_COLLIDER_LOOKUP
-            [{ tiles.data[{ grid_x + grid_y * tiles.width } as usize] - 1 } as usize];
-        let color = match visible_tiles.contains(&(grid_x, grid_y)) || is_collider {
+    let visible_to_camera = camera.get_visible_tiles();
+
+    for (grid_x, grid_y) in visible_to_camera.iter() {
+        let tile = tiles.data.get((grid_x + grid_y * tiles.width) as usize).unwrap();
+        let color = match visible_to_player.contains(&(*grid_x, *grid_y)){
             true => WHITE,
             false => NOT_VISIBLE_TILE_COLOR,
         };
         draw_texture_ex(
             &assets.get_texture("tiles.png"),
-            grid_x as f32 * 8.0,
-            grid_y as f32 * 8.0,
+            *grid_x as f32 * 8.0,
+            *grid_y as f32 * 8.0,
             color, // Make into shadow render later
             DrawTextureParams {
                 source: Some(Rect::new(
@@ -172,9 +170,9 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16
     }
 }
 
-pub fn draw_collidables(world: &TileMap) {
-    for (index, tile) in world.data.iter().enumerate() {
-        let (grid_x, grid_y) = (index as u16 % world.width, index as u16 / world.width);
+pub fn draw_collidables(world: &TileMap, camera: &GameCamera) {
+    for (grid_x, grid_y) in camera.get_visible_tiles() {
+        let tile = world.data.get(grid_x as usize + grid_y as usize * 8).unwrap();
         if TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
             draw_rect(
                 Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),

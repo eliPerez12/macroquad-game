@@ -50,62 +50,36 @@ pub fn render_ui(player: &Player) {
 
 pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
     let text_size = 50.0;
-    draw_text(
-        "Debug Menu v0.1.2",
-        text_size / 2.0,
-        text_size / 2.0 * 1.0 + text_size / 4.0 * 1.0,
-        text_size,
-        WHITE,
-    );
-    draw_text(
-        &format!("FPS: {}", &get_fps().to_string()),
-        text_size / 2.0,
-        text_size / 2.0 * 2.0 + text_size / 4.0 * 2.0,
-        text_size,
-        WHITE,
-    );
-    draw_text(
-        &format!(
-            "OS: {}",
-            match is_windows() {
-                true => "Windows",
-                false => "Linux",
-            }
-        ),
-        text_size / 2.0,
-        text_size / 2.0 * 3.0 + text_size / 4.0 * 3.0,
-        text_size,
-        WHITE,
-    );
-    draw_text(
-        &format!("Health: {}", player.health.round()),
-        text_size / 2.0,
-        text_size / 2.0 * 4.0 + text_size / 4.0 * 4.0,
-        text_size,
-        WHITE,
-    );
-    draw_text(
-        &format!("Stamina: {}", player.stamina.round()),
-        text_size / 2.0,
-        text_size / 2.0 * 5.0 + text_size / 4.0 * 5.0,
-        text_size,
-        WHITE,
-    );
-    draw_text(
-        &format!("Player Pos: {}", (player.pos / 8.0).floor()),
-        text_size / 2.0,
-        text_size / 2.0 * 6.0 + text_size / 4.0 * 6.0,
-        text_size,
-        WHITE,
-    );
-    draw_text(
-        &format!(
-            "Aiming at: {}",
-            (camera.screen_to_world(mouse_position().into()) / 8.0).floor()
-        ),
-        text_size / 2.0,
-        text_size / 2.0 * 7.0 + text_size / 4.0 * 7.0,
-        text_size,
-        WHITE,
-    );
+    let mut ui_stack = vec![];
+
+    ui_stack.push("Debug Menu v0.1.2".to_string());
+    ui_stack.push(format!("FPS: {}", &get_fps().to_owned()));
+    ui_stack.push(format!(
+        "OS: {}",
+        match is_windows() {
+            true => "Windows",
+            false => "Linux",
+        }
+    ));
+
+    ui_stack.push(format!("Health: {}", player.health.round()));
+    ui_stack.push(format!("Stamina: {}", player.stamina.round()));
+    ui_stack.push(format!("Player Pos: {}", (player.pos / 8.0).floor()));
+    ui_stack.push(format!(
+        "Aiming at: {}",
+        (camera.screen_to_world(mouse_position().into()) / 8.0).floor()
+    ));
+
+    ui_stack.push(format!("Visible Tiles Camera:  {}", camera.get_visible_tiles().len()));
+
+
+    for (stack_pos, element) in ui_stack.iter().enumerate() {
+        draw_text(
+            element,
+            text_size / 2.0,
+            text_size / 2.0 * stack_pos as f32 + text_size / 4.0 * stack_pos as f32 + text_size,
+            text_size,
+            WHITE,
+        );
+    }
 }

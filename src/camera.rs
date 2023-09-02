@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::collections::HashSet;
+
 use macroquad::prelude::*;
 
 pub struct GameCamera {
@@ -74,6 +76,21 @@ impl GameCamera {
         const PAN_SPEED: f32 = 12.0; // Bigger number means slower pan
         let camera_dist_from_player = self.target - target;
         self.target -= camera_dist_from_player / PAN_SPEED;
+    }
+
+    pub fn get_visible_tiles(&self) -> HashSet<(u16, u16)> {
+        let mut visible_tiles = HashSet::new();
+        let top_left = self.screen_to_world(Vec2::ZERO);
+        let bottom_right = self.screen_to_world(Vec2::new(screen_width(), screen_height()));
+        let (top_grid_x, top_grid_y) = ((top_left.x as u16 / 8) as u16, top_left.y as u16 / 8);
+        let (bottem_grid_x, bottem_grid_y) = ((bottom_right.x as u16 / 8) as u16 + 1, bottom_right.y as u16 / 8 + 1) ;
+        
+        for y in top_grid_y..bottem_grid_y {
+            for x in top_grid_x..bottem_grid_x {
+                visible_tiles.insert((x, y));
+            }
+        }
+        visible_tiles
     }
 }
 

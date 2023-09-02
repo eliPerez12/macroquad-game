@@ -48,7 +48,7 @@ async fn main() {
         set_camera(&camera);
 
         // Draws example world
-        draw_world(&world, &assets, &player);
+        draw_world(&world, &assets, &player, &camera);
 
         // Draw player
         player.draw(&assets);
@@ -59,7 +59,7 @@ async fn main() {
         if debug_on {
             // player._draw_debug_rays();
             player.draw_hitbox();
-            draw_collidables(&world);
+            draw_collidables(&world, &camera);
         }
 
         // Bullets
