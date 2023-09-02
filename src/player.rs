@@ -61,14 +61,11 @@ impl Player {
     }
 
     // Function to handle player movements
-    pub fn handle_player_movements(&mut self, camera: &GameCamera, _tile_map: &TileMap) {
+    pub fn handle_player_movements(&mut self, camera: &GameCamera, tile_map: &TileMap) {
         // Update
         self.handle_movement_state();
         self.handle_velocity();
-        //self.handle_collisions(tile_map);
         self.handle_stamina();
-
-        // TEMP FOR DEBUG
         self.handle_gun_controls();
         self.handle_clothes_controls();
 
@@ -179,68 +176,11 @@ impl Player {
             }
         }
     }
-
-    fn _handle_collisions(&mut self, tile_map: &TileMap) {
-        // Potential new positions after applying velocity
-        let mut new_x = self.pos.x + self.vel.x;
-        let mut new_y = self.pos.y + self.vel.y;
     
-        // Check for X-axis collisions first
-        for (index, tile) in tile_map.data.iter().enumerate() {
-            if !TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
-                continue;
-            }
-            
-            let tile_x = (index as f32 % tile_map.width as f32) * 8.0;
-            let tile_y = (index as f32 / tile_map.width as f32) * 8.0;
-            let tile_rect = Rect::new(tile_x, tile_y, 8.0, 8.0);
-            
-            let player_hitbox = Rect::new(new_x, new_y, self.get_hitbox().w, self.get_hitbox().h);
     
-            if player_hitbox.intersect(tile_rect).is_some() {
-                new_x = if self.vel.x > 0.0 {
-                    tile_rect.x - player_hitbox.w
-                } else if self.vel.x < 0.0 {
-                    tile_rect.x + tile_rect.w
-                } else {
-                    new_x
-                };
-                self.vel.x = 0.0;
-            }
-        }
-    
-        // Check for Y-axis collisions
-        for (index, tile) in tile_map.data.iter().enumerate() {
-            if !TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
-                continue;
-            }
-            
-            let tile_x = (index as f32 % tile_map.width as f32) * 8.0;
-            let tile_y = (index as f32 / tile_map.width as f32) * 8.0;
-            let tile_rect = Rect::new(tile_x, tile_y, 8.0, 8.0);
-            
-            let player_hitbox = Rect::new(new_x, new_y, self.get_hitbox().w, self.get_hitbox().h);
-    
-            if player_hitbox.intersect(tile_rect).is_some() {
-                new_y = if self.vel.y > 0.0 {
-                    tile_rect.y - player_hitbox.h
-                } else if self.vel.y < 0.0 {
-                    tile_rect.y + tile_rect.h
-                } else {
-                    new_y
-                };
-                self.vel.y = 0.0;
-            }
-        }
-    
-        self.pos.x = new_x;
-        self.pos.y = new_y;
-    }
-    
-
-
     fn apply_velocity(&mut self) {
-        self.pos += self.vel * get_frame_time() * 60.0;
+        self.pos += self.vel* get_frame_time() * 60.0;
+
     }
 
     // Function to update the player's angle towards the mouse position
@@ -358,7 +298,7 @@ impl Player {
     }
 
     pub fn draw_hitbox(&self) {
-        draw_rect(self.get_hitbox(), Color::new(0.0, 1.0, 0.0, 0.8))
+        draw_rect(self.get_hitbox(), Color::new(0.5, 1.0, 0.0, 0.8))
     }
 
     pub fn _draw_debug_rays(&self) {

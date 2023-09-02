@@ -4,7 +4,10 @@ use entities::*;
 use macroquad::{miniquad::conf::Icon, prelude::*};
 use player::Player;
 use ui::{render_debug_ui, render_ui};
+use utils::draw_rect;
 use world::draw_world;
+
+use crate::maps::TILE_COLLIDER_LOOKUP;
 
 mod assets;
 mod camera;
@@ -30,7 +33,6 @@ async fn main() {
     let mut player = Player::new();
     player.pos = Vec2::new(60.0, 50.0);
     camera.target = player.pos;
-
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
     loop {
@@ -53,11 +55,17 @@ async fn main() {
         // Draws example world
         draw_world(&world, &assets, &player);
 
-        // Draw dummy
-        dummy.draw(&assets, &player);
-
+        for (index, tile) in world.data.iter().enumerate(){
+            let (grid_x, grid_y) = (index as u16 % world.width, index as u16 / world.width );
+            if TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
+                draw_rect(Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0), RED)
+            }
+        }
         // Draw player
         player.draw(&assets);
+        
+        // Draw dummy
+        dummy.draw(&assets, &player);
 
         if debug_on {
             // player._draw_debug_rays();
