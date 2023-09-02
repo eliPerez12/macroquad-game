@@ -1,4 +1,4 @@
-use crate::{assets::Assets, camera::GameCamera, player::Player};
+use crate::{assets::Assets, camera::GameCamera, player::{Player, self}, world::TileMap};
 use macroquad::{
     audio::{play_sound, PlaySoundParams},
     prelude::*,
@@ -21,6 +21,7 @@ pub fn handle_shooting(
     assets: &Assets,
     player: &Player,
     camera: &GameCamera,
+    tile_map: &TileMap
 ) {
     let is_shooting = (is_mouse_button_pressed(MouseButton::Left) | is_key_pressed(KeyCode::Space))
         && is_mouse_button_down(MouseButton::Right);
@@ -69,6 +70,7 @@ pub fn handle_shooting(
         }
     }
     bullets.retain(|bullet| !bullet.hit_something);
+    bullets.retain(|bullet| !tile_map.point_collides_with_tile(bullet.pos));
 }
 
 impl Dummy {

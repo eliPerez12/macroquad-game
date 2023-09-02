@@ -65,6 +65,7 @@ impl Player {
         // Update
         self.handle_movement_state();
         self.handle_velocity();
+        self.handle_collisions(tile_map);
         self.handle_stamina();
         self.handle_gun_controls();
         self.handle_clothes_controls();
@@ -241,6 +242,20 @@ impl Player {
             y: self.pos.y - rect_size / 2.0,
             w: rect_size,
             h: rect_size,
+        }
+    }
+
+    fn handle_collisions(&mut self, tile_map: &TileMap) {
+        let player_hitbox = self.get_hitbox();
+
+
+        // X vel
+        if tile_map.rect_collides_with_tile(Rect::new(player_hitbox.x + self.vel.x, player_hitbox.y, player_hitbox.w, player_hitbox.h)) {
+            self.vel.x = 0.0;
+        }
+        // Y vel
+        if tile_map.rect_collides_with_tile(Rect::new(player_hitbox.x, player_hitbox.y + self.vel.y , player_hitbox.w, player_hitbox.h)) {
+            self.vel.y = 0.0;
         }
     }
 }

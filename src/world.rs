@@ -1,4 +1,4 @@
-use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player};
+use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::draw_rect};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
@@ -14,6 +14,39 @@ pub struct TileMap {
     pub data: Vec<u8>,
     pub width: u16,
     pub height: u16,
+}
+
+impl TileMap {
+    pub fn rect_collides_with_tile(&self, rect: Rect) -> bool {
+        for (index, tile) in self.data.iter().enumerate() {
+            if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
+                continue;
+            }
+            let tile_grid_x = index as u16 % self.width;
+            let tile_grid_y = index as u16 / self.width;
+            let tile_rect = Rect::new(tile_grid_x as f32* 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
+
+            if rect.intersect(tile_rect).is_some() {
+                return true;
+            }
+        }
+        false
+    }
+    pub fn point_collides_with_tile(&self, point: Vec2) -> bool {
+        for (index, tile) in self.data.iter().enumerate() {
+            if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
+                continue;
+            }
+            let tile_grid_x = index as u16 % self.width;
+            let tile_grid_y = index as u16 / self.width;
+            let tile_rect = Rect::new(tile_grid_x as f32* 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
+
+            if tile_rect.contains(point) {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 fn find_tiles(
@@ -133,5 +166,14 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16
                 ..Default::default()
             },
         );
+    }
+}
+
+pub fn draw_collidables(world: &TileMap) {
+    for (index, tile) in world.data.iter().enumerate(){
+        let (grid_x, grid_y) = (index as u16 % world.width, index as u16 / world.width );
+        if TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
+            draw_rect(Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0), Color::new(1.0, 0.0, 0.3, 0.75))
+        }
     }
 }
