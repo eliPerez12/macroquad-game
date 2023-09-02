@@ -1,4 +1,4 @@
-use crate::{assets::Assets, camera::GameCamera, player::{Player, self}, world::TileMap};
+use crate::{assets::Assets, camera::GameCamera, player::Player, world::TileMap};
 use macroquad::{
     audio::{play_sound, PlaySoundParams},
     prelude::*,
@@ -21,7 +21,7 @@ pub fn handle_shooting(
     assets: &Assets,
     player: &Player,
     camera: &GameCamera,
-    tile_map: &TileMap
+    tile_map: &TileMap,
 ) {
     let is_shooting = (is_mouse_button_pressed(MouseButton::Left) | is_key_pressed(KeyCode::Space))
         && is_mouse_button_down(MouseButton::Right);

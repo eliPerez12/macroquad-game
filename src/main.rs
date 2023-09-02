@@ -4,7 +4,7 @@ use entities::*;
 use macroquad::{miniquad::conf::Icon, prelude::*};
 use player::Player;
 use ui::{render_debug_ui, render_ui};
-use world::{draw_world, draw_collidables};
+use world::{draw_collidables, draw_world};
 
 mod assets;
 mod camera;
@@ -52,7 +52,7 @@ async fn main() {
 
         // Draw player
         player.draw(&assets);
-        
+
         // Draw dummy
         dummy.draw(&assets, &player);
 

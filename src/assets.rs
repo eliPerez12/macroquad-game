@@ -111,12 +111,7 @@ impl Assets {
     }
 
     async fn load_bitmap(path: &str) -> DynamicImage {
-        
-        image::load_from_memory(&{
-            
-            load_file(path).await.unwrap()
-        })
-        .unwrap()
+        image::load_from_memory(&{ load_file(path).await.unwrap() }).unwrap()
     }
 
     async fn insert_clothes_pair(

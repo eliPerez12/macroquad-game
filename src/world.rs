@@ -24,7 +24,7 @@ impl TileMap {
             }
             let tile_grid_x = index as u16 % self.width;
             let tile_grid_y = index as u16 / self.width;
-            let tile_rect = Rect::new(tile_grid_x as f32* 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
+            let tile_rect = Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
 
             if rect.intersect(tile_rect).is_some() {
                 return true;
@@ -39,7 +39,7 @@ impl TileMap {
             }
             let tile_grid_x = index as u16 % self.width;
             let tile_grid_y = index as u16 / self.width;
-            let tile_rect = Rect::new(tile_grid_x as f32* 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
+            let tile_rect = Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
 
             if tile_rect.contains(point) {
                 return true;
@@ -86,7 +86,11 @@ fn find_tiles(
 
         // Keep shooting ray until it reaches a collider or the end of the length
         while reached_length < length && keep_casting_ray {
-            if x < 0.0 || y < 0.0 || x > tile_map.width as f32 * 8.0 || y > tile_map.height as f32 * 8.0 {
+            if x < 0.0
+                || y < 0.0
+                || x > tile_map.width as f32 * 8.0
+                || y > tile_map.height as f32 * 8.0
+            {
                 keep_casting_ray = false;
                 ray_end_points.push(Vec2::new(x, y));
                 continue;
@@ -136,7 +140,6 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player) {
     draw_tiles(tiles, assets, visible_tiles);
 }
 
-
 fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16)>) {
     const FIT_OFFSET: f32 = 0.25;
     const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.84, 0.84, 0.84, 1.0);
@@ -170,10 +173,13 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_tiles: HashSet<(u16, u16
 }
 
 pub fn draw_collidables(world: &TileMap) {
-    for (index, tile) in world.data.iter().enumerate(){
-        let (grid_x, grid_y) = (index as u16 % world.width, index as u16 / world.width );
+    for (index, tile) in world.data.iter().enumerate() {
+        let (grid_x, grid_y) = (index as u16 % world.width, index as u16 / world.width);
         if TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
-            draw_rect(Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0), Color::new(1.0, 0.0, 0.3, 0.75))
+            draw_rect(
+                Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
+                Color::new(1.0, 0.0, 0.3, 0.75),
+            )
         }
     }
 }

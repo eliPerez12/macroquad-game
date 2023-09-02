@@ -1,8 +1,13 @@
 use std::f32::consts::FRAC_PI_2;
 
 use crate::{
-    camera::GameCamera, items::Item, utils::draw_rect, world::ANGLE_PERIPHERAL_FACTOR,
-    world::{LINE_LENGTH, TileMap}, world::RAY_AMOUNT, Assets, maps::TILE_COLLIDER_LOOKUP,
+    camera::GameCamera,
+    items::Item,
+    utils::draw_rect,
+    world::ANGLE_PERIPHERAL_FACTOR,
+    world::RAY_AMOUNT,
+    world::{TileMap, LINE_LENGTH},
+    Assets,
 };
 use macroquad::prelude::*;
 
@@ -147,7 +152,8 @@ impl Player {
         if self.movement_state == PlayerMovementState::Sprinting
             && self.stamina_state == PlayerStaminaState::Normal
         {
-            self.stamina = (self.stamina - Player::STAMINA_COST * get_frame_time() * 60.0).max(0.0); // Deplete stamina for running
+            self.stamina = (self.stamina - Player::STAMINA_COST * get_frame_time() * 60.0).max(0.0);
+            // Deplete stamina for running
         }
         if self.is_aiming() {
             self.stamina =
@@ -158,7 +164,7 @@ impl Player {
             self.stamina_state = PlayerStaminaState::Recovering
         }
         // Regen stamina
-        
+
         self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0)
             .min(Player::MAX_STAMINA);
 
@@ -177,11 +183,9 @@ impl Player {
             }
         }
     }
-    
-    
-    fn apply_velocity(&mut self) {
-        self.pos += self.vel* get_frame_time() * 60.0;
 
+    fn apply_velocity(&mut self) {
+        self.pos += self.vel * get_frame_time() * 60.0;
     }
 
     // Function to update the player's angle towards the mouse position
@@ -248,13 +252,22 @@ impl Player {
     fn handle_collisions(&mut self, tile_map: &TileMap) {
         let player_hitbox = self.get_hitbox();
 
-
         // X vel
-        if tile_map.rect_collides_with_tile(Rect::new(player_hitbox.x + self.vel.x, player_hitbox.y, player_hitbox.w, player_hitbox.h)) {
+        if tile_map.rect_collides_with_tile(Rect::new(
+            player_hitbox.x + self.vel.x,
+            player_hitbox.y,
+            player_hitbox.w,
+            player_hitbox.h,
+        )) {
             self.vel.x = 0.0;
         }
         // Y vel
-        if tile_map.rect_collides_with_tile(Rect::new(player_hitbox.x, player_hitbox.y + self.vel.y , player_hitbox.w, player_hitbox.h)) {
+        if tile_map.rect_collides_with_tile(Rect::new(
+            player_hitbox.x,
+            player_hitbox.y + self.vel.y,
+            player_hitbox.w,
+            player_hitbox.h,
+        )) {
             self.vel.y = 0.0;
         }
     }
