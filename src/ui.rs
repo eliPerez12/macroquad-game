@@ -52,7 +52,17 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
     let text_size = 50.0;
     let mut ui_stack = vec![];
 
-    ui_stack.push("Debug Menu v0.1.2".to_string());
+    ui_stack.push(format!("Debug Menu v0.1.2 ({} on {})", {
+        #[cfg(debug_assertions)]
+        {"Debug Build"}
+        #[cfg(not(debug_assertions))]
+        {"Release Build"}
+    }, {
+        match is_windows() {
+            true => "Windows",
+            false => "Linux",
+        }
+    }));
     ui_stack.push(format!("FPS: {}", &get_fps().to_owned()));
     ui_stack.push(format!(
         "OS: {}",

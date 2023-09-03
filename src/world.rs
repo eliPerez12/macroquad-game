@@ -1,4 +1,5 @@
-use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::draw_rect, camera::GameCamera};
+use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::draw_rect
+    , camera::GameCamera};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
@@ -6,9 +7,9 @@ pub const LINE_LENGTH: f32 = 25.0 * 8.0;
 pub const ANGLE_PERIPHERAL_FACTOR: f32 = 8.0 / 8.0;
 
 #[cfg(debug_assertions)]
-pub const RAY_AMOUNT: f32 = 7.5;
+pub const RAY_AMOUNT: f32 = 2.0;
 #[cfg(not(debug_assertions))]
-pub const RAY_AMOUNT: f32 = 17.5;
+pub const RAY_AMOUNT: f32 = 8.0;
 
 pub struct TileMap {
     pub data: Vec<u8>,
@@ -54,10 +55,9 @@ fn find_tiles(
     length: f32,
     origin: Vec2,
     tile_map: &TileMap,
-    camera: &GameCamera,
+    _camera: &GameCamera,
 ) -> HashSet<(u16, u16)> {
     let mut tiles = HashSet::new();
-    let _visible_to_camera = camera.get_visible_tiles();
 
     for angle in angles {
         let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
@@ -84,7 +84,6 @@ fn find_tiles(
         }
 
         let mut reached_length = 0.0;
-
         // Keep shooting ray until it reaches a collider or the end of the length
         while reached_length < length {
             if x < 0.0
