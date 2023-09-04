@@ -1,5 +1,10 @@
-use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::draw_rect
-    , camera::GameCamera};
+use crate::{
+    assets::Assets,
+    maps::TILE_COLLIDER_LOOKUP,
+    player::Player,
+    utils::draw_rect,
+    camera::GameCamera
+};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
@@ -181,8 +186,9 @@ fn draw_tiles(world: &TileMap, assets: &Assets, visible_to_player: HashSet<(u16,
 
 pub fn draw_collidables(world: &TileMap, camera: &GameCamera) {
     for (grid_x, grid_y) in camera.get_visible_tiles(world) {
-        let tile = world.data.get(grid_x as usize + grid_y as usize * 8).unwrap();
-        if TILE_COLLIDER_LOOKUP[((*tile & 0x2FFFFFFF) - 1) as usize] {
+        let tile = world.data.get(grid_x as usize + grid_y as usize * world.width as usize).unwrap();
+        let original_tile = *tile & 0x1FFFFFFF;
+        if TILE_COLLIDER_LOOKUP[(original_tile - 1) as usize] {
             draw_rect(
                 Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
                 Color::new(1.0, 0.0, 0.3, 0.75),
