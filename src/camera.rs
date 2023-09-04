@@ -4,6 +4,8 @@ use std::collections::HashSet;
 
 use macroquad::prelude::*;
 
+use crate::world::TileMap;
+
 pub struct GameCamera {
     pub rotation: f32,
     pub zoom: Vec2,
@@ -78,15 +80,15 @@ impl GameCamera {
         self.target -= camera_dist_from_player / PAN_SPEED;
     }
 
-    pub fn get_visible_tiles(&self) -> HashSet<(u16, u16)> {
+    pub fn get_visible_tiles(&self, world: &TileMap) -> HashSet<(u16, u16)> {
         let mut visible_tiles = HashSet::new();
         let top_left = self.screen_to_world(Vec2::ZERO);
         let bottom_right = self.screen_to_world(Vec2::new(screen_width(), screen_height()));
-        let (top_grid_x, top_grid_y) = ((top_left.x as u16 / 8) as u16, top_left.y as u16 / 8);
-        let (bottem_grid_x, bottem_grid_y) = ((bottom_right.x as u16 / 8) as u16 + 1, bottom_right.y as u16 / 8 + 1) ;
+        let (top_grid_x, top_grid_y) = ((top_left.x as u16 / 8), top_left.y as u16 / 8);
+        let (bottem_grid_x, bottem_grid_y) = ((bottom_right.x as u16 / 8) + 1, bottom_right.y as u16 / 8 + 1) ;
         
-        for y in top_grid_y..bottem_grid_y {
-            for x in top_grid_x..bottem_grid_x {
+        for y in top_grid_y.min(world.height)..bottem_grid_y.min(world.height) {
+            for x in top_grid_x.min(world.width)..bottem_grid_x.min(world.width) {
                 visible_tiles.insert((x, y));
             }
         }

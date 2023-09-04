@@ -1,4 +1,4 @@
-use crate::{camera::GameCamera, player::*, utils::is_windows};
+use crate::{camera::GameCamera, player::*, utils::is_windows, world::TileMap};
 use macroquad::prelude::*;
 
 fn draw_rect(rect: &Rect, color: Color) {
@@ -10,18 +10,19 @@ fn draw_rect_lines(rect: &Rect, thickness: f32, color: Color) {
 }
 
 pub fn render_ui(player: &Player) {
+
     let health_bar = Rect {
-        x: screen_width() / 20.0,
-        y: screen_height() - screen_height() / 11.0,
-        w: screen_width() / 5.0,
-        h: screen_height() / 50.0,
+        x: screen_width() * 0.03,
+        y: screen_height() - screen_height() / 12.0,
+        w: screen_width() / 4.5,
+        h: screen_height() / 45.0,
     };
 
     let stamina_bar = Rect {
-        x: screen_width() / 20.0,
-        y: screen_height() - screen_height() / 15.0,
-        w: screen_width() / 5.0,
-        h: screen_height() / 80.0,
+        x: health_bar.x,
+        y: health_bar.y + health_bar.h,
+        w: health_bar.w,
+        h: health_bar.h * 0.8,
     };
 
     let filled_health_bar = {
@@ -48,7 +49,7 @@ pub fn render_ui(player: &Player) {
     draw_rect_lines(&stamina_bar, 3.0, BLACK);
 }
 
-pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
+pub fn render_debug_ui(player: &Player, camera: &GameCamera, world: &TileMap) {
     let text_size = 50.0;
     let mut ui_stack = vec![];
 
@@ -80,7 +81,7 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera) {
         (camera.screen_to_world(mouse_position().into()) / 8.0).floor()
     ));
 
-    ui_stack.push(format!("Visible Tiles Camera:  {}", camera.get_visible_tiles().len()));
+    ui_stack.push(format!("Visible Tiles Camera:  {}", camera.get_visible_tiles(&world).len()));
 
 
     for (stack_pos, element) in ui_stack.iter().enumerate() {

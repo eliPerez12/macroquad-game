@@ -28,7 +28,7 @@ async fn main() {
     let mut debug_on = false;
 
     let mut player = Player::new();
-    player.pos = Vec2::new(60.0, 50.0);
+    player.pos = Vec2::new(500.0, 500.0);
     camera.target = player.pos;
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
@@ -57,7 +57,6 @@ async fn main() {
         dummy.draw(&assets, &player);
 
         if debug_on {
-            // player._draw_debug_rays();
             player.draw_hitbox();
             draw_collidables(&world, &camera);
         }
@@ -73,7 +72,7 @@ async fn main() {
         // Rendering UI
         render_ui(&player);
         if debug_on {
-            render_debug_ui(&player, &camera);
+            render_debug_ui(&player, &camera, &world);
         }
         next_frame().await;
     }

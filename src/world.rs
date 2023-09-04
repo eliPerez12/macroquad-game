@@ -3,7 +3,7 @@ use crate::{assets::Assets, maps::TILE_COLLIDER_LOOKUP, player::Player, utils::d
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
-pub const LINE_LENGTH: f32 = 25.0 * 8.0;
+pub const LINE_LENGTH: f32 = 23.0 * 8.0;
 pub const ANGLE_PERIPHERAL_FACTOR: f32 = 8.0 / 8.0;
 
 #[cfg(debug_assertions)]
@@ -12,7 +12,7 @@ pub const RAY_AMOUNT: f32 = 2.0;
 pub const RAY_AMOUNT: f32 = 8.0;
 
 pub struct TileMap {
-    pub data: Vec<u8>,
+    pub data: Vec<u32>,
     pub width: u16,
     pub height: u16,
 }
@@ -20,7 +20,7 @@ pub struct TileMap {
 impl TileMap {
     pub fn rect_collides_with_tile(&self, rect: Rect) -> bool {
         for (index, tile) in self.data.iter().enumerate() {
-            if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
+            if !TILE_COLLIDER_LOOKUP[(tile & 0x3FFFFFFF - 1) as usize] {
                 continue;
             }
             let tile_grid_x = index as u16 % self.width;
@@ -100,7 +100,7 @@ fn find_tiles(
             if tile_x < tile_map.width && tile_y < tile_map.height {
                 let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
                 tiles.insert((tile_x, tile_y));
-                if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
+                if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF )- 1) as usize] {
                     break;
                 }
             }
@@ -131,21 +131,28 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player, camera: &Ga
         LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
         player.pos,
         tiles,
-        &camera
+        camera
     );
 
     // Render
-    draw_tiles(tiles, assets, visible_tiles, &camera);
+    draw_tiles(tiles, assets, visible_tiles, camera);
 }
 
-fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_to_player: HashSet<(u16, u16)>, camera: &GameCamera) {
+fn draw_tiles(world: &TileMap, assets: &Assets, visible_to_player: HashSet<(u16, u16)>, camera: &GameCamera) {
     const FIT_OFFSET: f32 = 0.25;
     const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.84, 0.84, 0.84, 1.0);
 
-    let visible_to_camera = camera.get_visible_tiles();
+    let visible_to_camera = camera.get_visible_tiles(&world);
 
     for (grid_x, grid_y) in visible_to_camera.iter() {
-        let tile = tiles.data.get((grid_x + grid_y * tiles.width) as usize).unwrap();
+        let tile = match world.data.get((grid_x + grid_y * world.width) as usize) {
+            Some(tile) => tile,
+            None => continue,
+        };
+        let flip_x = (tile & 0x80000000) != 0;
+        let flip_y = (tile & 0x40000000) != 0;
+        let tile = tile & 0x3FFFFFFF;
+
         let color = match visible_to_player.contains(&(*grid_x, *grid_y)){
             true => WHITE,
             false => NOT_VISIBLE_TILE_COLOR,
@@ -163,6 +170,9 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_to_player: HashSet<(u16,
                     8.0 - FIT_OFFSET,
                 )),
                 dest_size: Some(Vec2::new(8.0, 8.0)),
+                flip_x,
+                flip_y,
+
                 ..Default::default()
             },
         );
@@ -170,9 +180,9 @@ fn draw_tiles(tiles: &TileMap, assets: &Assets, visible_to_player: HashSet<(u16,
 }
 
 pub fn draw_collidables(world: &TileMap, camera: &GameCamera) {
-    for (grid_x, grid_y) in camera.get_visible_tiles() {
+    for (grid_x, grid_y) in camera.get_visible_tiles(world) {
         let tile = world.data.get(grid_x as usize + grid_y as usize * 8).unwrap();
-        if TILE_COLLIDER_LOOKUP[(*tile - 1) as usize] {
+        if TILE_COLLIDER_LOOKUP[((*tile & 0x2FFFFFFF) - 1) as usize] {
             draw_rect(
                 Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
                 Color::new(1.0, 0.0, 0.3, 0.75),
