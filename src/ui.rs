@@ -10,7 +10,6 @@ fn draw_rect_lines(rect: &Rect, thickness: f32, color: Color) {
 }
 
 pub fn render_ui(player: &Player) {
-
     let health_bar = Rect {
         x: screen_width() * 0.03,
         y: screen_height() - screen_height() / 12.0,
@@ -53,17 +52,25 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera, world: &TileMap) {
     let text_size = 50.0;
     let mut ui_stack = vec![];
 
-    ui_stack.push(format!("Debug Menu v0.1.2 ({} on {})", {
-        #[cfg(debug_assertions)]
-        {"Debug Build"}
-        #[cfg(not(debug_assertions))]
-        {"Release Build"}
-    }, {
-        match is_windows() {
-            true => "Windows",
-            false => "Linux",
+    ui_stack.push(format!(
+        "Debug Menu v0.1.2 ({} on {})",
+        {
+            #[cfg(debug_assertions)]
+            {
+                "Debug Build"
+            }
+            #[cfg(not(debug_assertions))]
+            {
+                "Release Build"
+            }
+        },
+        {
+            match is_windows() {
+                true => "Windows",
+                false => "Linux",
+            }
         }
-    }));
+    ));
     ui_stack.push(format!("FPS: {}", &get_fps().to_owned()));
     ui_stack.push(format!(
         "OS: {}",
@@ -81,8 +88,10 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera, world: &TileMap) {
         (camera.screen_to_world(mouse_position().into()) / 8.0).floor()
     ));
 
-    ui_stack.push(format!("Visible Tiles Camera:  {}", camera.get_visible_tiles(&world).len()));
-
+    ui_stack.push(format!(
+        "Visible Tiles Camera:  {}",
+        camera.get_visible_tiles(&world).len()
+    ));
 
     for (stack_pos, element) in ui_stack.iter().enumerate() {
         draw_text(

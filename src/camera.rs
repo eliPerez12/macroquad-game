@@ -85,11 +85,13 @@ impl GameCamera {
         let top_left = self.screen_to_world(Vec2::ZERO);
         let bottom_right = self.screen_to_world(Vec2::new(screen_width(), screen_height()));
         let (top_grid_x, top_grid_y) = ((top_left.x as u16 / 8), top_left.y as u16 / 8);
-        let (bottom_grid_x, bottom_grid_y) = ((bottom_right.x as u16 / 8) + 1, bottom_right.y as u16 / 8 + 1);
+        let (bottom_grid_x, bottom_grid_y) = (
+            (bottom_right.x as u16 / 8) + 1,
+            bottom_right.y as u16 / 8 + 1,
+        );
         visible_tiles.reserve(((bottom_grid_x - top_grid_x) * (bottom_grid_y - top_grid_y)).into());
 
-        
-        for y in top_grid_y.min(world.height)..bottom_grid_y.min(world.height) {
+c        for y in top_grid_y.min(world.height)..bottom_grid_y.min(world.height) {
             for x in top_grid_x.min(world.width)..bottom_grid_x.min(world.width) {
                 visible_tiles.insert((x, y));
             }
