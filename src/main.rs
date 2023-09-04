@@ -2,7 +2,7 @@ use assets::Assets;
 use camera::GameCamera;
 use entities::*;
 use macroquad::{miniquad::conf::Icon, prelude::*};
-use player::Player;
+use player::{Player, PlayerController};
 use ui::{render_debug_ui, render_ui};
 use world::{draw_collidables, draw_world};
 
@@ -21,24 +21,27 @@ async fn main() {
     let mut camera = GameCamera::new();
     let assets = Assets::new().await;
     let world = maps::example_world();
-    let mut dummy = Dummy {
-        pos: vec2(2.2 * 8.0, 9.3 * 8.0),
-        angle: 0.0,
-    };
     let mut debug_on = false;
 
     let mut player = Player::new();
-    player.pos = Vec2::new(500.0, 500.0);
+    let mut enemy = Player::new();
+
+    player.tp_grid(55, 55);
+    player.controller = PlayerController::User;
+
+    enemy.tp_grid(47, 47);
     camera.target = player.pos;
+
     let mut bullets: Vec<Bullet> = vec![];
     // Main game loop
     loop {
         // Update Game
         player.handle_player_movements(&camera, &world);
         handle_shooting(&mut bullets, &assets, &player, &camera, &world);
-        dummy.turn_to_face(&camera, player.pos);
         camera.handle_controls();
         camera.pan_to_target(player.pos);
+
+        enemy.turn_to_face(player.pos, &camera);
 
         if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::T) {
             debug_on = !debug_on;
@@ -52,12 +55,12 @@ async fn main() {
 
         // Draw player
         player.draw(&assets);
-
-        // Draw dummy
-        dummy.draw(&assets, &player);
+        // Draw enemy 
+        enemy.draw(&assets);
 
         if debug_on {
             player.draw_hitbox();
+            enemy.draw_hitbox();
             draw_collidables(&world, &camera);
         }
 

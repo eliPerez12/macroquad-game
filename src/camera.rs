@@ -1,9 +1,7 @@
 #![allow(dead_code)]
 
 use std::collections::HashSet;
-
 use macroquad::prelude::*;
-
 use crate::world::TileMap;
 
 pub struct GameCamera {
@@ -33,7 +31,7 @@ impl GameCamera {
             self.target_zoom *= mouse_wheel().1 / 1200.0 + 1.0;
         }
 
-        self.target_zoom = self.target_zoom.max(4.0);
+        self.target_zoom = self.target_zoom.max(5.0);
         self.target_zoom = self.target_zoom.min(25.0);
 
         self.set_camera_zoom();
@@ -91,7 +89,7 @@ impl GameCamera {
         );
         visible_tiles.reserve(((bottom_grid_x - top_grid_x) * (bottom_grid_y - top_grid_y)).into());
 
-c        for y in top_grid_y.min(world.height)..bottom_grid_y.min(world.height) {
+        for y in top_grid_y.min(world.height)..bottom_grid_y.min(world.height) {
             for x in top_grid_x.min(world.width)..bottom_grid_x.min(world.width) {
                 visible_tiles.insert((x, y));
             }

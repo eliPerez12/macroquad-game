@@ -58,9 +58,9 @@ impl TileMap {
     fn get_tile(&self, grid_x: u16, grid_y: u16) -> Option<(u32, bool, bool)> {
         if let Some(tile) = self.data.get((grid_x + grid_y * self.width) as usize) {
             Some((
-                tile & 0x1FFFFFFF,        // Get all bits except top three
-                (tile & 0x80000000) != 0, // Get most significant bit
-                (tile & 0x40000000) != 0, // Get most lease bit
+                tile & 0x1FFFFFFF,        // Get all bits except top three, which returns the original tile
+                (tile & 0x80000000) != 0, // Get most significant bit for flip_x
+                (tile & 0x40000000) != 0, // Get most lease bit for flip_y
             ))
         } else {
             None
@@ -163,7 +163,8 @@ fn draw_tiles(
     camera: &GameCamera,
 ) {
     const FIT_OFFSET: f32 = 0.25;
-    const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.84, 0.84, 0.84, 1.0);
+    const VISIBLE_COLOR: Color = Color::new(1.0, 1.0, 1.0, 1.0);
+    const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.85, 0.85, 0.85, 1.0);
 
     let visible_to_camera = camera.get_visible_tiles(&world);
 
@@ -173,7 +174,7 @@ fn draw_tiles(
             None => continue,
         };
         let color = match visible_to_player.contains(&(*grid_x, *grid_y)) {
-            true => WHITE,
+            true => VISIBLE_COLOR,
             false => NOT_VISIBLE_TILE_COLOR,
         };
 

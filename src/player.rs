@@ -1,5 +1,3 @@
-use std::f32::consts::FRAC_PI_2;
-
 use crate::{
     camera::GameCamera,
     items::Item,
@@ -9,8 +7,16 @@ use crate::{
     world::{TileMap, LINE_LENGTH},
     Assets,
 };
+use std::f32::consts::FRAC_PI_2;
 use macroquad::prelude::*;
 
+pub enum PlayerController {
+    User,
+    None,
+}
+
+
+// Player stuct
 pub struct Player {
     pub pos: Vec2,
     pub vel: Vec2,
@@ -22,6 +28,7 @@ pub struct Player {
     pub stamina_state: PlayerStaminaState,
     pub clothes: Item::Clothes,
     pub gun: Item::Gun,
+    pub controller: PlayerController,
 }
 
 #[derive(PartialEq, Eq)]
@@ -62,6 +69,8 @@ impl Player {
             health: 100.0,
             clothes: Item::Clothes::dark_clothes(),
             gun: Item::Gun::sawed_shotgun(),
+            controller: PlayerController::None,
+
         }
     }
 
@@ -98,8 +107,8 @@ impl Player {
         }
     }
 
+    // Handle inputs and calculate velocity 
     fn handle_velocity(&mut self) {
-        // Determine max velocity based on running state
         let player_max_vel: f32 = {
             if self.movement_state == PlayerMovementState::Sprinting
                 && self.stamina_state == PlayerStaminaState::Normal
@@ -189,11 +198,17 @@ impl Player {
     }
 
     // Function to update the player's angle towards the mouse position
-    pub fn update_angle_to_mouse(&mut self, camera: &GameCamera) {
+    fn update_angle_to_mouse(&mut self, camera: &GameCamera) {
         let mouse_pos: Vec2 = mouse_position().into();
         let screen_center = camera.world_to_screen(self.pos);
         let mouse_dist_center = mouse_pos - screen_center;
         self.angle = f32::atan2(-mouse_dist_center.x, mouse_dist_center.y);
+    }
+
+    pub fn turn_to_face(&mut self, pos: Vec2, camera: &GameCamera) {
+        let pos = camera.world_to_screen(pos);
+        let dist = pos - camera.world_to_screen(self.pos) ;
+        self.angle = f32::atan2(-dist.x, dist.y);
     }
 
     // Checks if any keys are down that would move the player
@@ -214,9 +229,13 @@ impl Player {
     }
 
     fn is_aiming(&self) -> bool {
-        is_mouse_button_down(MouseButton::Right)
+        match self.controller {
+            PlayerController::User => is_mouse_button_down(MouseButton::Right),
+            PlayerController::None => false,
+        }
     }
 
+    // Gets the angles of rays cast by the player
     pub fn get_player_rays(&self, fov: f32, line_length: f32) -> Vec<f32> {
         let ray_amount = {
             let amount = (fov * line_length * RAY_AMOUNT) as i32;
@@ -239,6 +258,7 @@ impl Player {
         angles
     }
 
+    // Player hitbox
     pub fn get_hitbox(&self) -> Rect {
         let rect_size = 4.7;
         Rect {
@@ -249,12 +269,13 @@ impl Player {
         }
     }
 
+    // Handles collisions between world and player hitbox
     fn handle_collisions(&mut self, tile_map: &TileMap) {
         let player_hitbox = self.get_hitbox();
 
         // X vel
         if tile_map.rect_collides_with_tile(Rect::new(
-            player_hitbox.x + self.vel.x,
+            player_hitbox.x + self.vel.x * get_frame_time() * 60.0,
             player_hitbox.y,
             player_hitbox.w,
             player_hitbox.h,
@@ -264,36 +285,61 @@ impl Player {
         // Y vel
         if tile_map.rect_collides_with_tile(Rect::new(
             player_hitbox.x,
-            player_hitbox.y + self.vel.y,
+            player_hitbox.y + self.vel.y * get_frame_time() * 60.0,
             player_hitbox.w,
             player_hitbox.h,
         )) {
             self.vel.y = 0.0;
         }
     }
+
+    pub fn tp_grid(&mut self, grid_x: u16, grid_y: u16) {
+        self.pos = Vec2::new(grid_x as f32 * 8.0 + 0.5, grid_y as f32 * 8.0 + 0.5);
+    }
+
+    pub fn _tp(&mut self, pos: Vec2) {
+        self.pos = pos
+    }
 }
 
 // Drawing logic
 impl Player {
+
+    // Draw texture on player
     fn draw_on_player(&self, texture: &Texture2D) {
         const CENTER_OFFSET: f32 = 1.0 / 6.0;
+        const SCALE_FACTOR: f32 = 17.0 * 1.3333333;
+        
+        let half_scale = SCALE_FACTOR / 2.0;
+        let x_pos = self.pos.x - half_scale + CENTER_OFFSET;
+        let y_pos = self.pos.y - half_scale - CENTER_OFFSET;
+        
         draw_texture_ex(
             texture,
-            self.pos.x - (17.0 * 1.3333333) / 2.0 + CENTER_OFFSET,
-            self.pos.y - (17.0 * 1.3333333) / 2.0 - CENTER_OFFSET,
+            x_pos,
+            y_pos,
             WHITE,
             DrawTextureParams {
                 rotation: self.angle,
                 pivot: Some(self.pos),
-                dest_size: Some(Vec2::new(17.0 * 1.3333333, 17.0 * 1.3333333)),
+                dest_size: Some(Vec2::new(SCALE_FACTOR, SCALE_FACTOR)),
                 ..Default::default()
             },
         );
     }
+    
+    // Draw player shadow
+    fn draw_player_shadow(&self) {
+        const CENTER_OFFSET: f32 = 1.0 / 6.0;
+        draw_circle(
+            self.pos.x + CENTER_OFFSET + 0.25,
+            self.pos.y - CENTER_OFFSET + 0.25,
+            3.5,
+            Color::from_rgba(0, 0, 0, 70),
+        );
+    }
 
     pub fn draw(&self, assets: &Assets) {
-        const CENTER_OFFSET: f32 = 1.0 / 6.0;
-
         // Get gun texture
         let gun_name = self.gun.name;
         let gun_texture = match self.is_aiming() {
@@ -311,15 +357,8 @@ impl Player {
         // Get backpack texture
         let backpack_texture = assets.get_texture("backpack.png");
 
-        // Draw player shadow
-        draw_circle(
-            self.pos.x + CENTER_OFFSET + 0.3,
-            self.pos.y - CENTER_OFFSET + 0.3,
-            3.2,
-            Color::from_rgba(0, 0, 0, 70),
-        );
-
         // Draw entire player
+        self.draw_player_shadow();
         self.draw_on_player(&gun_texture);
         self.draw_on_player(&player_texture);
         self.draw_on_player(&backpack_texture);

@@ -356,10 +356,14 @@ pub fn example_world() -> TileMap {
 }
 
 pub const TILE_COLLIDER_LOOKUP: [bool; 8 * 10] = [
-    false, true, false, false, false, false, false, false, false, false, false, false, false, true,
-    false, false, false, true, false, true, true, true, false, false, false, true, false, true,
-    true, true, false, false, false, true, true, true, true, true, false, false, true, true, false,
-    false, false, false, false, false, false, false, false, false, false, false, false, false,
-    false, false, false, true, false, false, false, false, false, false, false, false, true, true,
-    true, true, false, false, false, false, false, false, false, false,
+    false, true, false, false, false, false, false, false,
+    false, false, false, false, false, true, false, false,
+    false, true, false, true, true, true, false, false,
+    false, true, false, true, true, true, false, false,
+    false, true, true, true, true, true, false, false, 
+    true, true, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, true, false, false, false, false,
+    false, false, false, false, true, true, true, true, 
+    false, false, false, false, false, false, false, false,
 ];
