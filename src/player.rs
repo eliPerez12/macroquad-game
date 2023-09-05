@@ -2,9 +2,12 @@ use crate::{
     camera::GameCamera,
     items::Item,
     utils::draw_rect,
-    world::ANGLE_PERIPHERAL_FACTOR,
-    world::RAY_AMOUNT,
-    world::{TileMap, LINE_LENGTH},
+    world::{
+        ANGLE_PERIPHERAL_FACTOR,
+        RAY_AMOUNT,
+        TileMap,
+        LINE_LENGTH
+    },
     Assets,
 };
 use std::f32::consts::FRAC_PI_2;
@@ -14,7 +17,6 @@ pub enum PlayerController {
     User,
     None,
 }
-
 
 // Player stuct
 pub struct Player {
@@ -173,7 +175,6 @@ impl Player {
             self.stamina_state = PlayerStaminaState::Recovering
         }
         // Regen stamina
-
         self.stamina = (self.stamina + Player::STAMINA_REGEN * get_frame_time() * 60.0)
             .min(Player::MAX_STAMINA);
 
@@ -247,7 +248,7 @@ impl Player {
         };
         let angle_increment = fov / ray_amount as f32;
 
-        // Get angles for rays that are evenly divided in the field of view
+        //Get angles for rays that are evenly divided in the field of view
         let angles: Vec<f32> = (0..ray_amount)
             .map(|ray| {
                 self.angle + angle_increment * ray as f32 - fov / 2.0
@@ -365,7 +366,11 @@ impl Player {
     }
 
     pub fn draw_hitbox(&self) {
-        draw_rect(self.get_hitbox(), Color::new(0.5, 1.0, 0.0, 0.8))
+        let color = match self.controller {
+            PlayerController::User => Color::new(0.5, 1.0, 0.0, 0.8),
+            PlayerController::None => Color::new(0.8, 1.0, 3.0, 0.8),
+        };
+        draw_rect(self.get_hitbox(), color);
     }
 
     pub fn _draw_debug_rays(&self) {

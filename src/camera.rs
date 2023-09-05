@@ -73,9 +73,9 @@ impl GameCamera {
 
     // Moves camera to target slowly
     pub fn pan_to_target(&mut self, target: Vec2) {
-        const PAN_SPEED: f32 = 12.0; // Bigger number means slower pan
+        const PAN_SPEED: f32 = 12.0 ; // Bigger number means slower pan
         let camera_dist_from_player = self.target - target;
-        self.target -= camera_dist_from_player / PAN_SPEED;
+        self.target -= camera_dist_from_player / PAN_SPEED * get_frame_time() * 60.0;
     }
 
     pub fn get_visible_tiles(&self, world: &TileMap) -> HashSet<(u16, u16)> {

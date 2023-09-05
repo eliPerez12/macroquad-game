@@ -9,7 +9,7 @@ pub const LINE_LENGTH: f32 = 23.0 * 8.0;
 pub const ANGLE_PERIPHERAL_FACTOR: f32 = 8.0 / 8.0;
 
 #[cfg(debug_assertions)]
-pub const RAY_AMOUNT: f32 = 2.0;
+pub const RAY_AMOUNT: f32 = 1.8;
 #[cfg(not(debug_assertions))]
 pub const RAY_AMOUNT: f32 = 8.0;
 
@@ -76,67 +76,68 @@ fn find_tiles(
     _camera: &GameCamera,
 ) -> HashSet<(u16, u16)> {
     let mut tiles = HashSet::new();
-
     for angle in angles {
-        let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
+        tiles.extend(find_tiles_for_ray(tile_map, angle, origin, length));
+    }
+    tiles
+}
 
-        let dx = angle.cos();
-        let dy = angle.sin();
+fn find_tiles_for_ray(tile_map: &TileMap, angle: f32, origin: Vec2, length: f32) -> Vec<(u16, u16)> {
+    let mut tiles = Vec::new();
+    let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
 
-        let delta_dist_x = (1.0 / dx).abs();
-        let delta_dist_y = (1.0 / dy).abs();
+    let dx = angle.cos();
+    let dy = angle.sin();
 
-        let mut step_x = 1;
-        let mut step_y = 1;
-        let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
-        let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
+    let delta_dist_x = (1.0 / dx).abs();
+    let delta_dist_y = (1.0 / dy).abs();
 
-        if dx < 0.0 {
-            step_x = -1;
-            side_dist_x = (x - x.floor()) * delta_dist_x;
+    let mut step_x = 1;
+    let mut step_y = 1;
+    let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
+    let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
+
+    if dx < 0.0 {
+        step_x = -1;
+        side_dist_x = (x - x.floor()) * delta_dist_x;
+    }
+
+    if dy < 0.0 {
+        step_y = -1;
+        side_dist_y = (y - y.floor()) * delta_dist_y;
+    }
+
+    let mut reached_length = 0.0;
+
+    while reached_length < length {
+        if x < 0.0 || y < 0.0 || x > tile_map.width as f32 * 8.0 || y > tile_map.height as f32 * 8.0 {
+            break;
         }
 
-        if dy < 0.0 {
-            step_y = -1;
-            side_dist_y = (y - y.floor()) * delta_dist_y;
-        }
+        let tile_x = x as u16;
+        let tile_y = y as u16;
 
-        let mut reached_length = 0.0;
-        // Keep shooting ray until it reaches a collider or the end of the length
-        while reached_length < length {
-            if x < 0.0
-                || y < 0.0
-                || x > tile_map.width as f32 * 8.0
-                || y > tile_map.height as f32 * 8.0
-            {
+        if tile_x < tile_map.width && tile_y < tile_map.height {
+            let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
+            tiles.push((tile_x, tile_y));
+            if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
                 break;
-            };
-
-            let tile_x = x.floor() as u16;
-            let tile_y = y.floor() as u16;
-
-            if tile_x < tile_map.width && tile_y < tile_map.height {
-                let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
-                tiles.insert((tile_x, tile_y));
-                if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
-                    break;
-                }
             }
+        }
 
-            // Move to the next cell
-            if side_dist_x < side_dist_y {
-                side_dist_x += delta_dist_x;
-                x += step_x as f32;
-                reached_length = side_dist_x;
-            } else {
-                side_dist_y += delta_dist_y;
-                y += step_y as f32;
-                reached_length = side_dist_y;
-            }
+        if side_dist_x < side_dist_y {
+            side_dist_x += delta_dist_x;
+            x += step_x as f32;
+            reached_length = side_dist_x;
+        } else {
+            side_dist_y += delta_dist_y;
+            y += step_y as f32;
+            reached_length = side_dist_y;
         }
     }
     tiles
 }
+
 
 pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player, camera: &GameCamera) {
     // Calculate tiles that are visible to the rays
