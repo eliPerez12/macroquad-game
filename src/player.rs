@@ -25,7 +25,6 @@ pub struct Player {
     pub health: f32,
     pub stamina: f32,
     pub angle: f32,
-
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
     pub clothes: Item::Clothes,
@@ -48,21 +47,21 @@ pub enum PlayerStaminaState {
 
 // Movement Logic
 impl Player {
-    const MAX_STAMINA: f32 = 100.0;
-    const MIN_STAMINA_FOR_SPRINTING: f32 = 10.0;
-
     const SPRINTING_VELOCITY: f32 = 0.40;
     const WALKING_VELOCITY: f32 = 0.25;
     const PLAYER_ACC: f32 = 0.1; // Acceleration
     const PLAYER_DEACC: f32 = 0.05; // Deacceleration
 
+    const MAX_STAMINA: f32 = 100.0;
+    const MIN_STAMINA_FOR_SPRINTING: f32 = 10.0;
     const STAMINA_REGEN: f32 = 0.07;
     const STAMINA_COST: f32 = 0.2;
     const STAMINA_AIMING_COST: f32 = 0.1;
 
-    pub fn new() -> Player {
+
+    pub fn new(grid_x: u16, grid_y: u16) -> Player {
         Player {
-            pos: Vec2::ZERO,
+            pos: Vec2::new(grid_x as f32* 8.0 + 0.5, grid_y as f32 * 8.0 + 0.5),
             vel: Vec2::ZERO,
             stamina: Player::MAX_STAMINA,
             movement_state: PlayerMovementState::Idle,
@@ -76,19 +75,25 @@ impl Player {
         }
     }
 
-    // Function to handle player movements
-    pub fn handle_player_movements(&mut self, camera: &GameCamera, tile_map: &TileMap) {
-        // Update
-        self.handle_movement_state();
-        self.handle_velocity();
-        self.handle_collisions(tile_map);
-        self.handle_stamina();
-        self.handle_gun_controls();
-        self.handle_clothes_controls();
+    pub fn update(&mut self, camera: &GameCamera, tile_map: &TileMap) {
+        match self.controller {
+            PlayerController::User => {
+                // Update
+                self.handle_movement_state();
+                self.handle_velocity();
+                self.handle_collisions(tile_map);
+                self.handle_stamina();
+                self.handle_gun_controls();
+                self.handle_clothes_controls();
 
-        // Apply
-        self.apply_velocity();
-        self.update_angle_to_mouse(camera);
+                // Apply
+                self.apply_velocity();
+                self.update_angle_to_mouse(camera);
+            },
+            PlayerController::None => {
+
+            },
+        }
     }
 
     fn handle_gun_controls(&mut self) {

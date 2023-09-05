@@ -24,9 +24,8 @@ async fn main() {
     let mut fps_graph = FpsBarGraph::new();
     let mut debug_on = false;
 
-
-    let mut player = Player::new();
-    let mut enemy = Player::new();
+    let mut player = Player::new(55, 55);
+    let mut enemy = Player::new(47, 47);
 
     player.tp_grid(55, 55);
     player.controller = PlayerController::User; // Allow control from the user
@@ -39,7 +38,7 @@ async fn main() {
     // Main game loop
     loop {
         // Update Game
-        player.handle_player_movements(&camera, &world);
+        player.update(&camera, &world);
         handle_shooting(&mut bullets, &assets, &player, &camera, &world);
         camera.handle_controls();
         camera.pan_to_target(player.pos);

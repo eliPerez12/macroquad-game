@@ -73,7 +73,6 @@ fn find_tiles(
     length: f32,
     origin: Vec2,
     tile_map: &TileMap,
-    _camera: &GameCamera,
 ) -> HashSet<(u16, u16)> {
     let mut tiles = HashSet::new();
     for angle in angles {
@@ -150,7 +149,6 @@ pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player, camera: &Ga
         LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
         player.pos,
         tiles,
-        camera,
     );
 
     // Render

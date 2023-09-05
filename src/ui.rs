@@ -138,7 +138,7 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera, world: &TileMap) {
     ));
 
     ui_stack.push(format!(
-        "Visible Tiles Camera:  {}",
+        "Tiles visible: {}",
         camera.get_visible_tiles(&world).len()
     ));
 

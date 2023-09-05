@@ -1,6 +1,4 @@
 #![allow(dead_code)]
-
-use std::collections::HashSet;
 use macroquad::prelude::*;
 use crate::world::TileMap;
 
@@ -31,8 +29,10 @@ impl GameCamera {
             self.target_zoom *= mouse_wheel().1 / 1200.0 + 1.0;
         }
 
-        self.target_zoom = self.target_zoom.max(5.0);
-        self.target_zoom = self.target_zoom.min(25.0);
+        let (max_zoom, min_zoom) = (6.0, 30.0);
+
+        self.target_zoom = self.target_zoom.min(min_zoom);
+        self.target_zoom = self.target_zoom.max(max_zoom);
 
         self.set_camera_zoom();
     }
@@ -78,8 +78,8 @@ impl GameCamera {
         self.target -= camera_dist_from_player / PAN_SPEED * get_frame_time() * 60.0;
     }
 
-    pub fn get_visible_tiles(&self, world: &TileMap) -> HashSet<(u16, u16)> {
-        let mut visible_tiles = HashSet::new();
+    pub fn get_visible_tiles(&self, world: &TileMap) -> Vec<(u16, u16)> {
+        let mut visible_tiles = vec![];
         let top_left = self.screen_to_world(Vec2::ZERO);
         let bottom_right = self.screen_to_world(Vec2::new(screen_width(), screen_height()));
         let (top_grid_x, top_grid_y) = ((top_left.x as u16 / 8), top_left.y as u16 / 8);
@@ -91,7 +91,7 @@ impl GameCamera {
 
         for y in top_grid_y.min(world.height)..bottom_grid_y.min(world.height) {
             for x in top_grid_x.min(world.width)..bottom_grid_x.min(world.width) {
-                visible_tiles.insert((x, y));
+                visible_tiles.push((x, y));
             }
         }
         visible_tiles
