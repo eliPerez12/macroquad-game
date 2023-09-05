@@ -51,7 +51,7 @@ async fn main() {
 
         fps_graph.update();
 
-        // Draw in world space
+        /////* Draw in world space */////
         set_camera(&camera);
 
         // Draws example world
@@ -74,7 +74,7 @@ async fn main() {
             draw_collidables(&world, &camera);
         }
 
-        // Draw in screen space
+        /////* Draw in screen space */////
         set_default_camera();
 
         // Rendering UI

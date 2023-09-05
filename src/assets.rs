@@ -170,6 +170,19 @@ impl Assets {
             ),
         )
         .await;
+        self.insert_clothes_pair(
+            &player_bitmap,
+            &player_aiming_bitmap,
+            "red",
+            (
+                Color::from_rgba(177, 43, 43, 255),
+                Color::from_rgba(128, 36, 36, 255),
+                Color::from_rgba(147, 41, 41, 255),
+                Color::from_rgba(35, 35, 35, 255),
+                Color::from_rgba(27, 27, 27, 255),
+            ),
+        )
+        .await;
     }
 }
 

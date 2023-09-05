@@ -42,18 +42,18 @@ impl GameCamera {
         let transform = mat.transform_point3(vec3(point.x, point.y, 0.));
 
         vec2(
-            (transform.x / 2. + 0.5) * screen_width(),
-            (0.5 - transform.y / 2.) * screen_height(),
+            (transform.x / 2.0 + 0.5) * screen_width(),
+            (0.5 - transform.y / 2.0) * screen_height(),
         )
     }
 
     pub fn screen_to_world(&self, point: Vec2) -> Vec2 {
         let point = vec2(
-            point.x / screen_width() * 2. - 1.,
-            1. - point.y / screen_height() * 2.,
+            point.x / screen_width() * 2. - 1.0,
+            1.0 - point.y / screen_height() * 2.0,
         );
         let inv_mat = self.matrix().inverse();
-        let transform = inv_mat.transform_point3(vec3(point.x, point.y, 0.));
+        let transform = inv_mat.transform_point3(vec3(point.x, point.y, 0.0));
 
         vec2(transform.x, transform.y)
     }

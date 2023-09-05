@@ -68,7 +68,7 @@ impl Player {
             stamina_state: PlayerStaminaState::Normal,
             angle: 0.0,
             health: 100.0,
-            clothes: Item::Clothes::dark_clothes(),
+            clothes: Item::Clothes::red_clothes(),
             gun: Item::Gun::sawed_shotgun(),
             controller: PlayerController::None,
 

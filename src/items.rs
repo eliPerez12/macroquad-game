@@ -42,5 +42,10 @@ pub mod Item {
         pub fn dark_clothes() -> Clothes {
             Clothes { name: "dark" }
         }
+        pub fn red_clothes() -> Clothes {
+            Clothes { name: "red" }
+        }
+        
+
     }
 }
