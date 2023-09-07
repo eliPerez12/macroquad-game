@@ -68,60 +68,6 @@ impl TileMap {
         }
     }
 
-    pub fn line_collides_with_tile(&self, origin: Vec2, length: f32, angle: f32) -> bool {
-        let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
-
-        let dx = angle.cos();
-        let dy = angle.sin();
-
-        let delta_dist_x = (1.0 / dx).abs();
-        let delta_dist_y = (1.0 / dy).abs();
-
-        let mut step_x = 1;
-        let mut step_y = 1;
-        let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
-        let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
-
-        if dx < 0.0 {
-            step_x = -1;
-            side_dist_x = (x - x.floor()) * delta_dist_x;
-        }
-
-        if dy < 0.0 {
-            step_y = -1;
-            side_dist_y = (y - y.floor()) * delta_dist_y;
-        }
-
-        let mut reached_length = 0.0;
-
-        while reached_length < length {
-            if x < 0.0 || y < 0.0 || x > self.width as f32 * 8.0 || y > self.height as f32 * 8.0 {
-                return true;
-            }
-
-            let tile_x = x as u16;
-            let tile_y = y as u16;
-
-            if tile_x < self.width && tile_y < self.height {
-                let tile = self.get_tile(tile_x, tile_y).unwrap().0;
-                if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
-                    return true;
-                }
-            }
-
-            if side_dist_x < side_dist_y {
-                side_dist_x += delta_dist_x;
-                x += step_x as f32;
-                reached_length = side_dist_x;
-            } else {
-                side_dist_y += delta_dist_y;
-                y += step_y as f32;
-                reached_length = side_dist_y;
-            }
-        }
-        false
-    }
-
     pub fn find_tiles(
         &self,
         angles: Vec<f32>,

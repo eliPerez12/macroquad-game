@@ -60,7 +60,7 @@ async fn main() {
         // Draw player
         player.draw(&assets);
 
-        // Draw enemy 
+        // Draw enemy
         let visible_tiles = world.find_tiles(
             player.get_player_rays(std::f32::consts::PI, LINE_LENGTH),
             LINE_LENGTH / 8.0 * 1.0,
@@ -103,7 +103,7 @@ async fn main() {
 
 fn conf() -> Conf {
     Conf {
-        window_title: String::from("Macroquad"),
+        window_title: String::from("Top down shooter"),
         window_width: 1260,
         window_height: 768,
         fullscreen: false,

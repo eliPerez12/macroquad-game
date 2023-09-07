@@ -18,7 +18,7 @@ pub enum PlayerController {
     None,
 }
 
-// Player stuct
+// Player struct
 pub struct Player {
     pub pos: Vec2,
     pub vel: Vec2,
