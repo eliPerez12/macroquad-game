@@ -24,10 +24,9 @@ async fn main() {
     let mut fps_graph = FpsBarGraph::new();
     let mut debug_on = false;
 
-    let mut player = Player::new(55, 55);
+    let mut player = Player::new(52, 55);
     let mut enemy = Player::new(47, 47);
 
-    player.tp_grid(55, 55);
     player.controller = PlayerController::User; // Allow control from the user
 
     enemy.tp_grid(47, 47);
@@ -51,7 +50,7 @@ async fn main() {
 
         fps_graph.update();
 
-        /////* Draw in world space */////
+        ////// Draw in world space //////
         set_camera(&camera);
 
         // Draws example world
@@ -66,12 +65,10 @@ async fn main() {
             LINE_LENGTH / 8.0 * 1.0,
             player.pos,
         );
-        let grid_pos = {(
-                (enemy.pos.x / 8.0) as u16,
-                (enemy.pos.y / 8.0) as u16,
-            )
-        };
-        if visible_tiles.contains(&grid_pos) {
+        if visible_tiles.contains(&(
+            (enemy.pos.x / 8.0) as u16,
+            (enemy.pos.y / 8.0) as u16,
+        )) {
             enemy.draw(&assets);
         }
 
@@ -86,14 +83,13 @@ async fn main() {
             world.draw_collidables(&camera);
         }
 
-        /////* Draw in screen space */////
+        ////// Draw in screen space //////
         set_default_camera();
 
         // Rendering UI
         render_ui(&player);
         if debug_on {
             render_debug_ui(&player, &camera, &world);
-
             fps_graph.draw();
         }
 

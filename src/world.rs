@@ -55,13 +55,14 @@ impl TileMap {
         false
     }
 
-    // Returns (original_tile, flip_x, flip_y)
-    fn get_tile(&self, grid_x: u16, grid_y: u16) -> Option<(u32, bool, bool)> {
+    // Returns (tile_id, flip_x, flip_y, rotate)
+    fn get_tile(&self, grid_x: u16, grid_y: u16) -> Option<(u32, bool, bool, bool)> {
         if let Some(tile) = self.data.get((grid_x + grid_y * self.width) as usize) {
             Some((
-                tile & 0x1FFFFFFF,        // Get all bits except top three, which returns the original tile
+                tile & 0x1FFFFFFF,        // Get all bits except top three, which returns the tile id
                 (tile & 0x80000000) != 0, // Get most significant bit for flip_x
-                (tile & 0x40000000) != 0, // Get most lease bit for flip_y
+                (tile & 0x40000000) != 0, // Get second bit bit for flip_y
+                (tile & 0x20000000) != 0, // Get third bit for rotate
             ))
         } else {
             None
@@ -117,11 +118,11 @@ impl TileMap {
             let tile_y = y as u16;
 
             if tile_x < self.width && tile_y < self.height {
-                let tile = self.data[(tile_x + tile_y * self.width) as usize];
-                tiles.push((tile_x, tile_y));
-                if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
+                let tile_id = self.data[(tile_x + tile_y * self.width) as usize] & 0x1FFFFFFF;
+                if TILE_COLLIDER_LOOKUP[((tile_id) - 1) as usize] {
                     break;
                 }
+                tiles.push((tile_x, tile_y));
             }
 
             if side_dist_x < side_dist_y {
@@ -166,7 +167,7 @@ impl TileMap {
         let visible_to_camera = camera.get_visible_tiles(&self);
 
         for (grid_x, grid_y) in visible_to_camera.iter() {
-            let (tile, flip_x, flip_y) = match self.get_tile(*grid_x, *grid_y) {
+            let (tile_id, flip_x, flip_y, rotate) = match self.get_tile(*grid_x, *grid_y) {
                 Some(tile) => tile,
                 None => continue,
             };
@@ -175,24 +176,34 @@ impl TileMap {
                 false => NOT_VISIBLE_TILE_COLOR,
             };
 
+            let mut draw_params = DrawTextureParams {
+                source: Some(Rect::new(
+                    ((tile_id - 1) % 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
+                    ((tile_id - 1) / 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
+                    8.0 - FIT_OFFSET,
+                    8.0 - FIT_OFFSET,
+                )),
+                dest_size: Some(Vec2::new(8.0, 8.0)),
+                flip_x,
+                flip_y,
+                rotation: if rotate { std::f32::consts::PI / 2.0 } else { 0.0 },
+                ..Default::default()
+            };
+
+            // Correct for rotate
+            if rotate {
+                draw_params.flip_y = !draw_params.flip_y;
+                if flip_x {
+                    draw_params.flip_x = !draw_params.flip_x;
+                }
+            }
+            
             draw_texture_ex(
                 &assets.get_texture("tiles.png"),
                 *grid_x as f32 * 8.0,
                 *grid_y as f32 * 8.0,
                 color, // Make into shadow render later
-                DrawTextureParams {
-                    source: Some(Rect::new(
-                        ((tile - 1) % 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
-                        ((tile - 1) / 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
-                        8.0 - FIT_OFFSET,
-                        8.0 - FIT_OFFSET,
-                    )),
-                    dest_size: Some(Vec2::new(8.0, 8.0)),
-                    flip_x,
-                    flip_y,
-
-                    ..Default::default()
-                },
+                draw_params,
             );
         }
     }
