@@ -106,11 +106,14 @@ impl Player {
     }
 
     fn handle_clothes_controls(&mut self) {
-        if is_key_pressed(KeyCode::Key3) {
+        if is_key_pressed(KeyCode::Key4) {
             self.clothes = Item::Clothes::blue_clothes()
         }
-        if is_key_pressed(KeyCode::Key4) {
+        if is_key_pressed(KeyCode::Key5) {
             self.clothes = Item::Clothes::dark_clothes()
+        }
+        if is_key_pressed(KeyCode::Key5) {
+            self.clothes = Item::Clothes::red_clothes()
         }
     }
 

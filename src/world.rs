@@ -37,6 +37,7 @@ impl TileMap {
         }
         false
     }
+
     pub fn point_collides_with_tile(&self, point: Vec2) -> bool {
         for index in 0..(self.width * self.height) {
             let tile = self.get_tile(index as u16 % self.width, index as u16 / self.width).unwrap().0;
@@ -66,147 +67,200 @@ impl TileMap {
             None
         }
     }
-}
 
-fn find_tiles(
-    angles: Vec<f32>,
-    length: f32,
-    origin: Vec2,
-    tile_map: &TileMap,
-) -> HashSet<(u16, u16)> {
-    let mut tiles = HashSet::new();
-    for angle in angles {
-        tiles.extend(find_tiles_for_ray(tile_map, angle, origin, length));
-    }
-    tiles
-}
+    pub fn line_collides_with_tile(&self, origin: Vec2, length: f32, angle: f32) -> bool {
+        let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
 
-fn find_tiles_for_ray(tile_map: &TileMap, angle: f32, origin: Vec2, length: f32) -> Vec<(u16, u16)> {
-    let mut tiles = Vec::new();
-    let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
+        let dx = angle.cos();
+        let dy = angle.sin();
 
-    let dx = angle.cos();
-    let dy = angle.sin();
+        let delta_dist_x = (1.0 / dx).abs();
+        let delta_dist_y = (1.0 / dy).abs();
 
-    let delta_dist_x = (1.0 / dx).abs();
-    let delta_dist_y = (1.0 / dy).abs();
+        let mut step_x = 1;
+        let mut step_y = 1;
+        let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
+        let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
 
-    let mut step_x = 1;
-    let mut step_y = 1;
-    let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
-    let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
-
-    if dx < 0.0 {
-        step_x = -1;
-        side_dist_x = (x - x.floor()) * delta_dist_x;
-    }
-
-    if dy < 0.0 {
-        step_y = -1;
-        side_dist_y = (y - y.floor()) * delta_dist_y;
-    }
-
-    let mut reached_length = 0.0;
-
-    while reached_length < length {
-        if x < 0.0 || y < 0.0 || x > tile_map.width as f32 * 8.0 || y > tile_map.height as f32 * 8.0 {
-            break;
+        if dx < 0.0 {
+            step_x = -1;
+            side_dist_x = (x - x.floor()) * delta_dist_x;
         }
 
-        let tile_x = x as u16;
-        let tile_y = y as u16;
+        if dy < 0.0 {
+            step_y = -1;
+            side_dist_y = (y - y.floor()) * delta_dist_y;
+        }
 
-        if tile_x < tile_map.width && tile_y < tile_map.height {
-            let tile = tile_map.data[(tile_x + tile_y * tile_map.width) as usize];
-            tiles.push((tile_x, tile_y));
-            if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
-                break;
+        let mut reached_length = 0.0;
+
+        while reached_length < length {
+            if x < 0.0 || y < 0.0 || x > self.width as f32 * 8.0 || y > self.height as f32 * 8.0 {
+                return true;
+            }
+
+            let tile_x = x as u16;
+            let tile_y = y as u16;
+
+            if tile_x < self.width && tile_y < self.height {
+                let tile = self.get_tile(tile_x, tile_y).unwrap().0;
+                if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
+                    return true;
+                }
+            }
+
+            if side_dist_x < side_dist_y {
+                side_dist_x += delta_dist_x;
+                x += step_x as f32;
+                reached_length = side_dist_x;
+            } else {
+                side_dist_y += delta_dist_y;
+                y += step_y as f32;
+                reached_length = side_dist_y;
             }
         }
-
-        if side_dist_x < side_dist_y {
-            side_dist_x += delta_dist_x;
-            x += step_x as f32;
-            reached_length = side_dist_x;
-        } else {
-            side_dist_y += delta_dist_y;
-            y += step_y as f32;
-            reached_length = side_dist_y;
-        }
+        false
     }
-    tiles
-}
 
+    pub fn find_tiles(
+        &self,
+        angles: Vec<f32>,
+        length: f32,
+        origin: Vec2,
+    ) -> HashSet<(u16, u16)> {
+        let mut tiles = HashSet::new();
+        for angle in angles {
+            tiles.extend(self.find_tiles_for_ray(angle, origin, length));
+        }
+        tiles
+    }
 
-pub fn draw_world(tiles: &TileMap, assets: &Assets, player: &Player, camera: &GameCamera) {
-    // Calculate tiles that are visible to the rays
-    let angles = player.get_player_rays(
-        std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR,
-        LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
-    );
-    let visible_tiles = find_tiles(
-        angles,
-        LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
-        player.pos,
-        tiles,
-    );
+    fn find_tiles_for_ray(&self, angle: f32, origin: Vec2, length: f32) -> Vec<(u16, u16)> {
+        let mut tiles = Vec::new();
+        let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
 
-    // Render
-    draw_tiles(tiles, assets, visible_tiles, camera);
-}
+        let dx = angle.cos();
+        let dy = angle.sin();
 
-fn draw_tiles(
-    world: &TileMap,
-    assets: &Assets,
-    visible_to_player: HashSet<(u16, u16)>,
-    camera: &GameCamera,
-) {
-    const FIT_OFFSET: f32 = 0.25;
-    const VISIBLE_COLOR: Color = Color::new(1.0, 1.0, 1.0, 1.0);
-    const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.85, 0.85, 0.85, 1.0);
+        let delta_dist_x = (1.0 / dx).abs();
+        let delta_dist_y = (1.0 / dy).abs();
 
-    let visible_to_camera = camera.get_visible_tiles(&world);
+        let mut step_x = 1;
+        let mut step_y = 1;
+        let mut side_dist_x = (x.ceil() - x) * delta_dist_x;
+        let mut side_dist_y = (y.ceil() - y) * delta_dist_y;
 
-    for (grid_x, grid_y) in visible_to_camera.iter() {
-        let (tile, flip_x, flip_y) = match world.get_tile(*grid_x, *grid_y) {
-            Some(tile) => tile,
-            None => continue,
-        };
-        let color = match visible_to_player.contains(&(*grid_x, *grid_y)) {
-            true => VISIBLE_COLOR,
-            false => NOT_VISIBLE_TILE_COLOR,
-        };
+        if dx < 0.0 {
+            step_x = -1;
+            side_dist_x = (x - x.floor()) * delta_dist_x;
+        }
 
-        draw_texture_ex(
-            &assets.get_texture("tiles.png"),
-            *grid_x as f32 * 8.0,
-            *grid_y as f32 * 8.0,
-            color, // Make into shadow render later
-            DrawTextureParams {
-                source: Some(Rect::new(
-                    ((tile - 1) % 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
-                    ((tile - 1) / 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
-                    8.0 - FIT_OFFSET,
-                    8.0 - FIT_OFFSET,
-                )),
-                dest_size: Some(Vec2::new(8.0, 8.0)),
-                flip_x,
-                flip_y,
+        if dy < 0.0 {
+            step_y = -1;
+            side_dist_y = (y - y.floor()) * delta_dist_y;
+        }
 
-                ..Default::default()
-            },
+        let mut reached_length = 0.0;
+
+        while reached_length < length {
+            if x < 0.0 || y < 0.0 || x > self.width as f32 * 8.0 || y > self.height as f32 * 8.0 {
+                break;
+            }
+
+            let tile_x = x as u16;
+            let tile_y = y as u16;
+
+            if tile_x < self.width && tile_y < self.height {
+                let tile = self.data[(tile_x + tile_y * self.width) as usize];
+                tiles.push((tile_x, tile_y));
+                if TILE_COLLIDER_LOOKUP[((tile & 0x3FFFFFFF) - 1) as usize] {
+                    break;
+                }
+            }
+
+            if side_dist_x < side_dist_y {
+                side_dist_x += delta_dist_x;
+                x += step_x as f32;
+                reached_length = side_dist_x;
+            } else {
+                side_dist_y += delta_dist_y;
+                y += step_y as f32;
+                reached_length = side_dist_y;
+            }
+        }
+        tiles
+    }
+
+    pub fn draw_world(&self, assets: &Assets, player: &Player, camera: &GameCamera) {
+        // Calculate tiles that are visible to the rays
+        let angles = player.get_player_rays(
+            std::f32::consts::PI * ANGLE_PERIPHERAL_FACTOR,
+            LINE_LENGTH * ANGLE_PERIPHERAL_FACTOR,
         );
-    }
-}
+        let visible_tiles = self.find_tiles(
+            angles,
+            LINE_LENGTH / 8.0 * ANGLE_PERIPHERAL_FACTOR,
+            player.pos,
+        );
 
-pub fn draw_collidables(world: &TileMap, camera: &GameCamera) {
-    for (grid_x, grid_y) in camera.get_visible_tiles(world) {
-        let tile = world.get_tile(grid_x, grid_y).unwrap().0;
-        if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
-            draw_rect(
-                Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
-                Color::new(1.0, 0.0, 0.3, 0.75),
-            )
+        // Render
+        self.draw_tiles(assets, visible_tiles, camera);
+    }
+
+    fn draw_tiles(
+        &self, 
+        assets: &Assets,
+        visible_to_player: HashSet<(u16, u16)>,
+        camera: &GameCamera,
+    ) {
+        const FIT_OFFSET: f32 = 0.25;
+        const VISIBLE_COLOR: Color = Color::new(1.0, 1.0, 1.0, 1.0);
+        const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.85, 0.85, 0.85, 1.0);
+
+        let visible_to_camera = camera.get_visible_tiles(&self);
+
+        for (grid_x, grid_y) in visible_to_camera.iter() {
+            let (tile, flip_x, flip_y) = match self.get_tile(*grid_x, *grid_y) {
+                Some(tile) => tile,
+                None => continue,
+            };
+            let color = match visible_to_player.contains(&(*grid_x, *grid_y)) {
+                true => VISIBLE_COLOR,
+                false => NOT_VISIBLE_TILE_COLOR,
+            };
+
+            draw_texture_ex(
+                &assets.get_texture("tiles.png"),
+                *grid_x as f32 * 8.0,
+                *grid_y as f32 * 8.0,
+                color, // Make into shadow render later
+                DrawTextureParams {
+                    source: Some(Rect::new(
+                        ((tile - 1) % 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
+                        ((tile - 1) / 8) as f32 * 8.0 + FIT_OFFSET / 2.0,
+                        8.0 - FIT_OFFSET,
+                        8.0 - FIT_OFFSET,
+                    )),
+                    dest_size: Some(Vec2::new(8.0, 8.0)),
+                    flip_x,
+                    flip_y,
+
+                    ..Default::default()
+                },
+            );
         }
     }
+
+    pub fn draw_collidables(&self, camera: &GameCamera) {
+        for (grid_x, grid_y) in camera.get_visible_tiles(&self) {
+            let tile = self.get_tile(grid_x, grid_y).unwrap().0;
+            if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
+                draw_rect(
+                    Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
+                    Color::new(1.0, 0.0, 0.3, 0.75),
+                )
+            }
+        }
+    }
+
 }

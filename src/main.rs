@@ -4,7 +4,7 @@ use entities::*;
 use macroquad::{miniquad::conf::Icon, prelude::*};
 use player::{Player, PlayerController};
 use ui::{render_debug_ui, render_ui, FpsBarGraph};
-use world::{draw_collidables, draw_world};
+use world::LINE_LENGTH;
 
 mod assets;
 mod camera;
@@ -55,13 +55,25 @@ async fn main() {
         set_camera(&camera);
 
         // Draws example world
-        draw_world(&world, &assets, &player, &camera);
+        world.draw_world( &assets, &player, &camera);
 
         // Draw player
         player.draw(&assets);
-        // Draw enemy 
-        enemy.draw(&assets);
 
+        // Draw enemy 
+        let visible_tiles = world.find_tiles(
+            player.get_player_rays(std::f32::consts::PI, LINE_LENGTH),
+            LINE_LENGTH / 8.0 * 1.0,
+            player.pos,
+        );
+        let grid_pos = {(
+                (enemy.pos.x / 8.0) as u16,
+                (enemy.pos.y / 8.0) as u16,
+            )
+        };
+        if visible_tiles.contains(&grid_pos) {
+            enemy.draw(&assets);
+        }
 
         // Draw Bullets
         for bullet in &bullets {
@@ -71,7 +83,7 @@ async fn main() {
         if debug_on {
             player.draw_hitbox();
             enemy.draw_hitbox();
-            draw_collidables(&world, &camera);
+            world.draw_collidables(&camera);
         }
 
         /////* Draw in screen space */////
@@ -81,6 +93,7 @@ async fn main() {
         render_ui(&player);
         if debug_on {
             render_debug_ui(&player, &camera, &world);
+
             fps_graph.draw();
         }
 
