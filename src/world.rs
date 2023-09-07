@@ -13,6 +13,8 @@ pub const RAY_AMOUNT: f32 = 1.8;
 #[cfg(not(debug_assertions))]
 pub const RAY_AMOUNT: f32 = 8.0;
 
+
+
 pub struct TileMap {
     pub data: Vec<u32>,
     pub width: u16,
