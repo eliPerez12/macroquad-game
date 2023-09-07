@@ -162,7 +162,7 @@ impl TileMap {
     ) {
         const FIT_OFFSET: f32 = 0.25;
         const VISIBLE_COLOR: Color = Color::new(1.0, 1.0, 1.0, 1.0);
-        const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.85, 0.85, 0.85, 1.0);
+        const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.83, 0.83, 0.83, 1.0);
 
         let visible_to_camera = camera.get_visible_tiles(&self);
 

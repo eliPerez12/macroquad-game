@@ -29,11 +29,12 @@ async fn main() {
 
     player.controller = PlayerController::User; // Allow control from the user
 
-    enemy.tp_grid(47, 47);
+    enemy.tp_grid(49, 48);
 
     camera.target = player.pos;
 
     let mut bullets: Vec<Bullet> = vec![];
+
     // Main game loop
     loop {
         // Update Game
@@ -65,10 +66,13 @@ async fn main() {
             LINE_LENGTH / 8.0 * 1.0,
             player.pos,
         );
-        if visible_tiles.contains(&(
-            (enemy.pos.x / 8.0) as u16,
-            (enemy.pos.y / 8.0) as u16,
-        )) {
+        let dist_to_player = {
+            let dx = enemy.pos.x - player.pos.x;
+            let dy = enemy.pos.y - player.pos.y;
+            (dx * dx + dy * dy).sqrt()
+        };
+        if visible_tiles.contains(&((enemy.pos.x / 8.0) as u16,(enemy.pos.y / 8.0) as u16)) ||
+        dist_to_player < 18.0 {
             enemy.draw(&assets);
         }
 
