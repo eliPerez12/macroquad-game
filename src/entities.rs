@@ -27,11 +27,17 @@ impl EntityManager {
         }
     }
     pub fn draw_entities(&self, assets: &Assets, player: &Player, tile_map: &crate::world::TileMap) {
+        // Get tiles visible to camera
         let visible_tiles = tile_map.find_tiles(
             player.get_player_rays(std::f32::consts::PI, crate::world::LINE_LENGTH),
             crate::world::LINE_LENGTH / 8.0 * 1.0,
             player.pos,
         );
+        // Draw bullets
+        for bullet in &self.bullets {
+            draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
+        }
+        // Draw players
         for other_player in &self.other_players {
             if let Some(other_player) = other_player {
                 let dist_to_player = {
@@ -44,9 +50,6 @@ impl EntityManager {
                     other_player.draw(&assets);
                 }
             }
-        }
-        for bullet in &self.bullets {
-            draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
         }
     }
     pub fn draw_entity_hitboxes(&self) {
@@ -79,14 +82,27 @@ impl EntityManager {
                 let mouse_pos: Vec2 = mouse_position().into();
                 let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
                 let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
-                let angle =
-                    angle + rand::gen_range(-player.gun.bullet_spread, player.gun.bullet_spread); // Apply angular spread
     
+                let (barrel_offset_x, barrel_offset_y) = (player.gun.barrel_offset.x, player.gun.barrel_offset.y);
+
+                let bullet_pos = Vec2 {
+                    x: player.pos.x + barrel_offset_x * -angle.cos() - barrel_offset_y * angle.sin(),
+                    y: player.pos.y + barrel_offset_x * angle.sin() + barrel_offset_y * -angle.cos(),
+                };
+                let mut new_angle = angle;
+                let dist_from_player = (mouse_dist_center.x * mouse_dist_center.x + mouse_dist_center.y * mouse_dist_center.y).sqrt();
+                if dist_from_player > 80.0 {
+                    let mouse_dist_center = mouse_pos - camera.world_to_screen(bullet_pos);
+                    new_angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
+                }
+
+                new_angle += rand::gen_range(-player.gun.bullet_spread, player.gun.bullet_spread);
+
                 self.bullets.push(Bullet {
-                    pos: player.pos,
+                    pos: bullet_pos,
                     vel: bullet_speed,
                     hit_something: false,
-                    angle,
+                    angle: new_angle,
                 });
             }
             play_sound(

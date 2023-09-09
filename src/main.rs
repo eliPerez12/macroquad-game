@@ -17,7 +17,12 @@ mod world;
 
 #[macroquad::main(conf)]
 async fn main() {
-    let (mut camera, assets, world, mut fps_graph) = init().await;
+    let (
+        mut camera,
+        assets,
+        tile_map,
+        mut fps_graph
+    ) = init().await;
     let mut debug_on = false;
 
     let mut player = Player::new(52, 55);
@@ -30,8 +35,8 @@ async fn main() {
     // Main game loop
     loop {
         // Update Game
-        player.update(&camera, &world);
-        entity_manager.handle_shooting(&assets, &player, &camera, &world);
+        player.update(&camera, &tile_map);
+        entity_manager.handle_shooting(&assets, &player, &camera, &tile_map);
         camera.handle_controls();
         camera.pan_to_target(player.pos);
 
@@ -47,19 +52,19 @@ async fn main() {
         set_camera(&camera);
 
         // Draws example world
-        world.draw_world( &assets, &player, &camera);
+        tile_map.draw_world( &assets, &player, &camera);
 
         // Draw player
         player.draw(&assets);
 
-        // Draw enemy
-        entity_manager.draw_entities(&assets, &player, &world);
+        // Draw entities
+        entity_manager.draw_entities(&assets, &player, &tile_map);
         
         // Draw debug thingys
         if debug_on {
             player.draw_hitbox();
             entity_manager.draw_entity_hitboxes();
-            world.draw_collidables(&camera);
+            tile_map.draw_collidables(&camera);
         }
 
         ////// Draw in screen space //////
@@ -68,7 +73,7 @@ async fn main() {
         // Rendering UI
         render_ui(&player);
         if debug_on {
-            render_debug_ui(&player, &camera, &world);
+            render_debug_ui(&player, &camera, &tile_map);
             fps_graph.draw();
         }
 

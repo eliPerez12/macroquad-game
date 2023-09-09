@@ -47,15 +47,15 @@ pub enum PlayerStaminaState {
 
 // Movement Logic
 impl Player {
-    const SPRINTING_VELOCITY: f32 = 0.40;
-    const WALKING_VELOCITY: f32 = 0.25;
+    const SPRINTING_VELOCITY: f32 = 0.42;
+    const WALKING_VELOCITY: f32 = 0.26;
     const PLAYER_ACC: f32 = 0.1; // Acceleration
     const PLAYER_DEACC: f32 = 0.05; // Deacceleration
 
     const MAX_STAMINA: f32 = 100.0;
     const MIN_STAMINA_FOR_SPRINTING: f32 = 10.0;
     const STAMINA_REGEN: f32 = 0.07;
-    const STAMINA_COST: f32 = 0.2;
+    const STAMINA_COST: f32 = 0.18;
     const STAMINA_AIMING_COST: f32 = 0.1;
 
 
@@ -106,10 +106,10 @@ impl Player {
     }
 
     fn handle_clothes_controls(&mut self) {
-        if is_key_pressed(KeyCode::Key4) {
+        if is_key_pressed(KeyCode::Key3) {
             self.clothes = Item::Clothes::blue_clothes()
         }
-        if is_key_pressed(KeyCode::Key5) {
+        if is_key_pressed(KeyCode::Key4) {
             self.clothes = Item::Clothes::dark_clothes()
         }
         if is_key_pressed(KeyCode::Key5) {
@@ -302,7 +302,7 @@ impl Player {
         }
     }
 
-    pub fn tp_grid(&mut self, grid_x: u16, grid_y: u16) {
+    pub fn _tp_grid(&mut self, grid_x: u16, grid_y: u16) {
         self.pos = Vec2::new(grid_x as f32 * 8.0 + 0.5, grid_y as f32 * 8.0 + 0.5);
     }
 

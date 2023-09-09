@@ -1,5 +1,7 @@
 #[allow(non_upper_case_globals, non_snake_case)]
 pub mod Item {
+    use macroquad::prelude::Vec2;
+
 
     #[derive(PartialEq)]
     pub struct Gun {
@@ -7,6 +9,7 @@ pub mod Item {
         pub bullet_speed: f32,
         pub bullet_spread: f32,
         pub bullets_per_shot: u32,
+        pub barrel_offset: Vec2,
     }
 
     pub struct Clothes {
@@ -19,8 +22,9 @@ pub mod Item {
             Gun {
                 name: "sawed_shotgun",
                 bullet_speed: 6.5,
-                bullet_spread: 0.125,
-                bullets_per_shot: 12,
+                bullet_spread: 0.120,
+                bullets_per_shot: 10,
+                barrel_offset: Vec2::new(1.0, -0.0),
             }
         }
 
@@ -30,6 +34,7 @@ pub mod Item {
                 bullet_speed: 9.0,
                 bullet_spread: 0.01,
                 bullets_per_shot: 1,
+                barrel_offset: Vec2::new(1.0, -0.0),
             }
         }
     }
