@@ -126,7 +126,7 @@ impl EntityManager {
             ) * get_frame_time()
                 * 60.0;
     
-            if bullet.vel.abs() < 1.0 {
+            if bullet.vel.abs() < 0.80 {
                 bullet.hit_something = true
             }
         }

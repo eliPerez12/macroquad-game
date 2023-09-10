@@ -16,6 +16,10 @@ pub mod Item {
         pub name: &'static str,
     }
 
+    pub struct Backpack {
+        pub name: &'static str,
+    }
+
     // Guns
     impl Gun {
         pub fn sawed_shotgun() -> Gun {
@@ -50,7 +54,14 @@ pub mod Item {
         pub fn red_clothes() -> Clothes {
             Clothes { name: "red" }
         }
-        
+    }
 
+    impl Backpack {
+        pub fn black_backpack() -> Backpack{
+            Backpack {name: "black_backpack"}
+        }
+        pub fn brown_backpack() -> Backpack{
+            Backpack {name: "brown_backpack"}
+        }
     }
 }

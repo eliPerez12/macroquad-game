@@ -28,6 +28,7 @@ pub struct Player {
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
     pub clothes: Item::Clothes,
+    pub backpack: Item::Backpack,
     pub gun: Item::Gun,
     pub controller: PlayerController,
 }
@@ -70,6 +71,7 @@ impl Player {
             health: 100.0,
             clothes: Item::Clothes::red_clothes(),
             gun: Item::Gun::sawed_shotgun(),
+            backpack: Item::Backpack::brown_backpack(),
             controller: PlayerController::None,
 
         }
@@ -114,6 +116,12 @@ impl Player {
         }
         if is_key_pressed(KeyCode::Key5) {
             self.clothes = Item::Clothes::red_clothes()
+        }
+        if is_key_pressed(KeyCode::Key6) {
+            self.backpack = Item::Backpack::black_backpack()
+        }
+        if is_key_pressed(KeyCode::Key7) {
+            self.backpack = Item::Backpack::brown_backpack()
         }
     }
 
@@ -363,8 +371,11 @@ impl Player {
             false => assets.get_texture(&format!("{clothes_name}_clothes_idle.png")),
         };
 
-        // Get backpack texture
-        let backpack_texture = assets.get_texture("backpack.png");
+        // Get player texture
+        let backpack_name = self.backpack.name;
+        let backpack_texture = assets.get_texture(&format!("{backpack_name}.png"));
+
+        dbg!(&format!("{backpack_name}.png"));
 
         // Draw entire player
         self.draw_player_shadow();
