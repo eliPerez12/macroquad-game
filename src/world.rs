@@ -6,14 +6,12 @@ use macroquad::prelude::*;
 use std::collections::HashSet;
 
 pub const LINE_LENGTH: f32 = 23.0 * 8.0;
-pub const ANGLE_PERIPHERAL_FACTOR: f32 = 8.0 / 8.0;
+pub const ANGLE_PERIPHERAL_FACTOR: f32 = 1.0;
 
 #[cfg(debug_assertions)]
 pub const RAY_AMOUNT: f32 = 1.8;
 #[cfg(not(debug_assertions))]
 pub const RAY_AMOUNT: f32 = 8.0;
-
-
 
 pub struct TileMap {
     pub data: Vec<u32>,
@@ -24,13 +22,16 @@ pub struct TileMap {
 impl TileMap {
     pub fn rect_collides_with_tile(&self, rect: Rect) -> bool {
         for index in 0..(self.width * self.height) {
-            let tile = self.get_tile(index as u16 % self.width, index as u16 / self.width).unwrap().0;
+            let tile = self
+                .get_tile(index % self.width, index / self.width)
+                .unwrap()
+                .0;
 
-            if !TILE_COLLIDER_LOOKUP[(tile- 1) as usize] {
+            if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
                 continue;
             }
-            let tile_grid_x = index as u16 % self.width;
-            let tile_grid_y = index as u16 / self.width;
+            let tile_grid_x = index % self.width;
+            let tile_grid_y = index / self.width;
             let tile_rect = Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
 
             if rect.intersect(tile_rect).is_some() {
@@ -42,12 +43,15 @@ impl TileMap {
 
     pub fn point_collides_with_tile(&self, point: Vec2) -> bool {
         for index in 0..(self.width * self.height) {
-            let tile = self.get_tile(index as u16 % self.width, index as u16 / self.width).unwrap().0;
+            let tile = self
+                .get_tile(index % self.width, index / self.width)
+                .unwrap()
+                .0;
             if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
                 continue;
             }
-            let tile_grid_x = index as u16 % self.width;
-            let tile_grid_y = index as u16 / self.width;
+            let tile_grid_x = index % self.width;
+            let tile_grid_y = index / self.width;
             let tile_rect = Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
 
             if tile_rect.contains(point) {
@@ -59,24 +63,19 @@ impl TileMap {
 
     // Returns (tile_id, flip_x, flip_y, rotate)
     fn get_tile(&self, grid_x: u16, grid_y: u16) -> Option<(u32, bool, bool, bool)> {
-        if let Some(tile) = self.data.get((grid_x + grid_y * self.width) as usize) {
-            Some((
-                tile & 0x1FFFFFFF,        // Get all bits except top three, which returns the tile id
-                (tile & 0x80000000) != 0, // Get most significant bit for flip_x
-                (tile & 0x40000000) != 0, // Get second bit bit for flip_y
-                (tile & 0x20000000) != 0, // Get third bit for rotate
-            ))
-        } else {
-            None
-        }
+        self.data
+            .get((grid_x + grid_y * self.width) as usize)
+            .map(|tile| {
+                (
+                    tile & 0x1FFFFFFF, // Get all bits except top three, which returns the tile id
+                    (tile & 0x80000000) != 0, // Get most significant bit for flip_x
+                    (tile & 0x40000000) != 0, // Get second bit bit for flip_y
+                    (tile & 0x20000000) != 0, // Get third bit for rotate
+                )
+            })
     }
 
-    pub fn find_tiles(
-        &self,
-        angles: Vec<f32>,
-        length: f32,
-        origin: Vec2,
-    ) -> HashSet<(u16, u16)> {
+    pub fn find_tiles(&self, angles: Vec<f32>, length: f32, origin: Vec2) -> HashSet<(u16, u16)> {
         let mut tiles = HashSet::new();
         for angle in angles {
             tiles.extend(self.find_tiles_for_ray(angle, origin, length));
@@ -157,7 +156,7 @@ impl TileMap {
     }
 
     fn draw_tiles(
-        &self, 
+        &self,
         assets: &Assets,
         visible_to_player: HashSet<(u16, u16)>,
         camera: &GameCamera,
@@ -166,7 +165,7 @@ impl TileMap {
         const VISIBLE_COLOR: Color = Color::new(1.0, 1.0, 1.0, 1.0);
         const NOT_VISIBLE_TILE_COLOR: Color = Color::new(0.83, 0.83, 0.83, 1.0);
 
-        let visible_to_camera = camera.get_visible_tiles(&self);
+        let visible_to_camera = camera.get_visible_tiles(self);
 
         for (grid_x, grid_y) in visible_to_camera.iter() {
             let (tile_id, flip_x, flip_y, rotate) = match self.get_tile(*grid_x, *grid_y) {
@@ -188,7 +187,11 @@ impl TileMap {
                 dest_size: Some(Vec2::new(8.0, 8.0)),
                 flip_x,
                 flip_y,
-                rotation: if rotate { std::f32::consts::PI / 2.0 } else { 0.0 },
+                rotation: if rotate {
+                    std::f32::consts::PI / 2.0
+                } else {
+                    0.0
+                },
                 ..Default::default()
             };
 
@@ -199,7 +202,7 @@ impl TileMap {
                     draw_params.flip_x = !draw_params.flip_x;
                 }
             }
-            
+
             draw_texture_ex(
                 &assets.get_texture("tiles.png"),
                 *grid_x as f32 * 8.0,
@@ -211,7 +214,7 @@ impl TileMap {
     }
 
     pub fn draw_collidables(&self, camera: &GameCamera) {
-        for (grid_x, grid_y) in camera.get_visible_tiles(&self) {
+        for (grid_x, grid_y) in camera.get_visible_tiles(self) {
             let tile = self.get_tile(grid_x, grid_y).unwrap().0;
             if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
                 draw_rect(
@@ -221,5 +224,4 @@ impl TileMap {
             }
         }
     }
-
 }

@@ -1,14 +1,14 @@
 use crate::{camera::GameCamera, player::*, utils::is_windows, world::TileMap};
-use std::collections::VecDeque;
 use macroquad::prelude::*;
+use std::collections::VecDeque;
 
 pub struct FpsBarGraph {
     fps_record: VecDeque<i32>,
-    highest_fps: f32
+    highest_fps: f32,
 }
 
 impl FpsBarGraph {
-    pub fn new() -> Self{
+    pub fn new() -> Self {
         let mut fps_record = VecDeque::new();
         for _ in 0..100 {
             fps_record.push_front(0);
@@ -28,24 +28,28 @@ impl FpsBarGraph {
 
     pub fn draw(&self) {
         let height = 80.0;
-        let width = screen_width()/7.0;
+        let width = screen_width() / 7.0;
         for (index, fps) in self.fps_record.iter().enumerate() {
             let fps = *fps as f32;
             let color = {
                 if fps < 25.0 {
                     Color::new(1.0, 0.0, 0.0, 0.8)
-                }
-                else if fps < 40.0 {
+                } else if fps < 40.0 {
                     Color::new(0.6, 1.0, 0.2, 0.8)
-                }
-                else {
+                } else {
                     Color::new(1.0, 1.0, 1.0, 0.8)
                 }
             };
-            let h = (fps/self.highest_fps) * height;
+            let h = (fps / self.highest_fps) * height;
             //let y = 100.0 - h;
-            let bw = width/self.fps_record.len() as f32; // Width of each bar
-            draw_rectangle(screen_width() - width + index as f32 * bw, 0.0, bw, h, color);
+            let bw = width / self.fps_record.len() as f32; // Width of each bar
+            draw_rectangle(
+                screen_width() - width + index as f32 * bw,
+                0.0,
+                bw,
+                h,
+                color,
+            );
         }
     }
 }
@@ -139,7 +143,7 @@ pub fn render_debug_ui(player: &Player, camera: &GameCamera, world: &TileMap) {
 
     ui_stack.push(format!(
         "Tiles visible: {}",
-        camera.get_visible_tiles(&world).len()
+        camera.get_visible_tiles(world).len()
     ));
 
     for (stack_pos, element) in ui_stack.iter().enumerate() {

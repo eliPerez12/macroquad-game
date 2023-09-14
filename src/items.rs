@@ -2,7 +2,6 @@
 pub mod Item {
     use macroquad::prelude::Vec2;
 
-
     #[derive(PartialEq)]
     pub struct Gun {
         pub name: &'static str,
@@ -57,11 +56,15 @@ pub mod Item {
     }
 
     impl Backpack {
-        pub fn black_backpack() -> Backpack{
-            Backpack {name: "black_backpack"}
+        pub fn black_backpack() -> Backpack {
+            Backpack {
+                name: "black_backpack",
+            }
         }
-        pub fn brown_backpack() -> Backpack{
-            Backpack {name: "brown_backpack"}
+        pub fn brown_backpack() -> Backpack {
+            Backpack {
+                name: "brown_backpack",
+            }
         }
     }
 }

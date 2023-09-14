@@ -2,16 +2,11 @@ use crate::{
     camera::GameCamera,
     items::Item,
     utils::draw_rect,
-    world::{
-        ANGLE_PERIPHERAL_FACTOR,
-        RAY_AMOUNT,
-        TileMap,
-        LINE_LENGTH
-    },
+    world::{TileMap, ANGLE_PERIPHERAL_FACTOR, LINE_LENGTH, RAY_AMOUNT},
     Assets,
 };
-use std::f32::consts::FRAC_PI_2;
 use macroquad::prelude::*;
+use std::f32::consts::FRAC_PI_2;
 
 pub enum PlayerController {
     User,
@@ -59,10 +54,9 @@ impl Player {
     const STAMINA_COST: f32 = 0.18;
     const STAMINA_AIMING_COST: f32 = 0.1;
 
-
     pub fn new(grid_x: u16, grid_y: u16) -> Player {
         Player {
-            pos: Vec2::new(grid_x as f32* 8.0 + 0.5, grid_y as f32 * 8.0 + 0.5),
+            pos: Vec2::new(grid_x as f32 * 8.0 + 0.5, grid_y as f32 * 8.0 + 0.5),
             vel: Vec2::ZERO,
             stamina: Player::MAX_STAMINA,
             movement_state: PlayerMovementState::Idle,
@@ -73,7 +67,6 @@ impl Player {
             gun: Item::Gun::sawed_shotgun(),
             backpack: Item::Backpack::brown_backpack(),
             controller: PlayerController::None,
-
         }
     }
 
@@ -91,10 +84,8 @@ impl Player {
                 // Apply
                 self.apply_velocity();
                 self.update_angle_to_mouse(camera);
-            },
-            PlayerController::None => {
-
-            },
+            }
+            PlayerController::None => {}
         }
     }
 
@@ -125,7 +116,7 @@ impl Player {
         }
     }
 
-    // Handle inputs and calculate velocity 
+    // Handle inputs and calculate velocity
     fn handle_velocity(&mut self) {
         let player_max_vel: f32 = {
             if self.movement_state == PlayerMovementState::Sprinting
@@ -224,7 +215,7 @@ impl Player {
 
     pub fn turn_to_face(&mut self, pos: Vec2, camera: &GameCamera) {
         let pos = camera.world_to_screen(pos);
-        let dist = pos - camera.world_to_screen(self.pos) ;
+        let dist = pos - camera.world_to_screen(self.pos);
         self.angle = f32::atan2(-dist.x, dist.y);
     }
 
@@ -321,16 +312,15 @@ impl Player {
 
 // Drawing logic
 impl Player {
-
     // Draw texture on player
     fn draw_on_player(&self, texture: &Texture2D) {
         const CENTER_OFFSET: f32 = 1.0 / 6.0;
         const SCALE_FACTOR: f32 = 17.0 * 1.3333333;
-        
+
         let half_scale = SCALE_FACTOR / 2.0;
         let x_pos = self.pos.x - half_scale + CENTER_OFFSET;
         let y_pos = self.pos.y - half_scale - CENTER_OFFSET;
-        
+
         draw_texture_ex(
             texture,
             x_pos,
@@ -344,7 +334,7 @@ impl Player {
             },
         );
     }
-    
+
     // Draw player shadow
     fn draw_player_shadow(&self) {
         const CENTER_OFFSET: f32 = 1.0 / 6.0;
@@ -374,8 +364,6 @@ impl Player {
         // Get player texture
         let backpack_name = self.backpack.name;
         let backpack_texture = assets.get_texture(&format!("{backpack_name}.png"));
-
-        dbg!(&format!("{backpack_name}.png"));
 
         // Draw entire player
         self.draw_player_shadow();

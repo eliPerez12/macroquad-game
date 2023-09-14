@@ -17,12 +17,7 @@ mod world;
 
 #[macroquad::main(conf)]
 async fn main() {
-    let (
-        mut camera,
-        assets,
-        tile_map,
-        mut fps_graph
-    ) = init().await;
+    let (mut camera, assets, tile_map, mut fps_graph) = init().await;
     let mut debug_on = false;
 
     let mut player = Player::new(52, 55);
@@ -41,7 +36,7 @@ async fn main() {
         camera.pan_to_target(player.pos);
 
         entity_manager.update(&player, &camera);
-        
+
         if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::T) {
             debug_on = !debug_on;
         }
@@ -52,14 +47,14 @@ async fn main() {
         set_camera(&camera);
 
         // Draws example world
-        tile_map.draw_world( &assets, &player, &camera);
+        tile_map.draw_world(&assets, &player, &camera);
 
         // Draw player
         player.draw(&assets);
 
         // Draw entities
         entity_manager.draw_entities(&assets, &player, &tile_map);
-        
+
         // Draw debug thingys
         if debug_on {
             player.draw_hitbox();
@@ -86,10 +81,9 @@ async fn init() -> (GameCamera, Assets, world::TileMap, FpsBarGraph) {
         GameCamera::new(),
         Assets::new().await,
         maps::example_world(),
-        FpsBarGraph::new()
+        FpsBarGraph::new(),
     )
 }
-
 
 fn conf() -> Conf {
     Conf {
