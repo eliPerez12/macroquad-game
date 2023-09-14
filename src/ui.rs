@@ -1,4 +1,4 @@
-use crate::{camera::GameCamera, player::*, utils::is_windows, world::TileMap};
+use crate::{camera::GameCamera, player::*, utils::is_windows, tile_map::TileMap};
 use macroquad::prelude::*;
 use std::collections::VecDeque;
 

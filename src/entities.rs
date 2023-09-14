@@ -1,4 +1,4 @@
-use crate::{assets::Assets, camera::GameCamera, player::Player, world::TileMap};
+use crate::{assets::Assets, camera::GameCamera, player::Player, tile_map::TileMap};
 use macroquad::{
     audio::{play_sound, PlaySoundParams},
     prelude::*,
@@ -27,7 +27,7 @@ impl EntityManager {
         &self,
         assets: &Assets,
         player: &Player,
-        tile_map: &crate::world::TileMap,
+        tile_map: &TileMap,
     ) {
         // Get tiles visible to camera
         let visible_tiles = tile_map.find_tiles(

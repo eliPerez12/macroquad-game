@@ -1,4 +1,4 @@
-use crate::world::TileMap;
+use crate::tile_map::TileMap;
 
 pub fn example_world() -> TileMap {
     TileMap {

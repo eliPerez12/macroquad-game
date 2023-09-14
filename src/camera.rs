@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::world::TileMap;
+use crate::tile_map::TileMap;
 use macroquad::prelude::*;
 
 pub struct GameCamera {
