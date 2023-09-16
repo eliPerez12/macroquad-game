@@ -22,6 +22,11 @@ impl World {
         World { tile_map: maps::example_world(), entities: EntityManager::new() }
     }
 
+    pub fn update(&mut self, player: &Player, camera: &GameCamera, assets: &Assets) {
+        self.entities.handle_shooting(assets, player, camera, &self.tile_map);
+        self.entities.update(player, camera);
+    }
+
     pub fn draw(&self, camera: &GameCamera, player: &Player, assets: &Assets) {
         // Draws example world
         self.tile_map.draw(assets, player, camera);

@@ -23,10 +23,14 @@ pub struct Player {
     pub angle: f32,
     pub movement_state: PlayerMovementState,
     pub stamina_state: PlayerStaminaState,
+    pub inventory: Inventory,
+    pub controller: PlayerController,
+}
+
+pub struct Inventory {
     pub clothes: Item::Clothes,
     pub backpack: Item::Backpack,
     pub gun: Item::Gun,
-    pub controller: PlayerController,
 }
 
 #[derive(PartialEq, Eq)]
@@ -64,9 +68,11 @@ impl Player {
             stamina_state: PlayerStaminaState::Normal,
             angle: 0.0,
             health: 100.0,
-            clothes: Item::Clothes::red_clothes(),
-            gun: Item::Gun::sawed_shotgun(),
-            backpack: Item::Backpack::brown_backpack(),
+            inventory: Inventory {
+                clothes: Item::Clothes::red_clothes(),
+                backpack: Item::Backpack::brown_backpack(),
+                gun: Item::Gun::sawed_shotgun(),
+            },
             controller: PlayerController::None,
         }
     }
@@ -92,28 +98,28 @@ impl Player {
 
     fn handle_gun_controls(&mut self) {
         if is_key_pressed(KeyCode::Key1) {
-            self.gun = Item::Gun::sawed_shotgun()
+            self.inventory.gun = Item::Gun::sawed_shotgun()
         }
         if is_key_pressed(KeyCode::Key2) {
-            self.gun = Item::Gun::sniper()
+            self.inventory.gun = Item::Gun::sniper()
         }
     }
 
     fn handle_clothes_controls(&mut self) {
         if is_key_pressed(KeyCode::Key3) {
-            self.clothes = Item::Clothes::blue_clothes()
+            self.inventory.clothes = Item::Clothes::blue_clothes()
         }
         if is_key_pressed(KeyCode::Key4) {
-            self.clothes = Item::Clothes::dark_clothes()
+            self.inventory.clothes = Item::Clothes::dark_clothes()
         }
         if is_key_pressed(KeyCode::Key5) {
-            self.clothes = Item::Clothes::red_clothes()
+            self.inventory.clothes = Item::Clothes::red_clothes()
         }
         if is_key_pressed(KeyCode::Key6) {
-            self.backpack = Item::Backpack::black_backpack()
+            self.inventory.backpack = Item::Backpack::black_backpack()
         }
         if is_key_pressed(KeyCode::Key7) {
-            self.backpack = Item::Backpack::brown_backpack()
+            self.inventory.backpack = Item::Backpack::brown_backpack()
         }
     }
 
@@ -349,21 +355,21 @@ impl Player {
 
     pub fn draw(&self, assets: &Assets) {
         // Get gun texture
-        let gun_name = self.gun.name;
+        let gun_name = self.inventory.gun.name;
         let gun_texture = match self.is_aiming() {
             true => assets.get_texture(&format!("{gun_name}_aiming.png")),
             false => assets.get_texture(&format!("{gun_name}_idle.png")),
         };
 
         // Get player texture
-        let clothes_name = self.clothes.name;
+        let clothes_name = self.inventory.clothes.name;
         let player_texture = match self.is_aiming() {
             true => assets.get_texture(&format!("{clothes_name}_clothes_aiming.png")),
             false => assets.get_texture(&format!("{clothes_name}_clothes_idle.png")),
         };
 
         // Get player texture
-        let backpack_name = self.backpack.name;
+        let backpack_name = self.inventory.backpack.name;
         let backpack_texture = assets.get_texture(&format!("{backpack_name}.png"));
 
         // Draw entire player

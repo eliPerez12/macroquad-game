@@ -1,9 +1,10 @@
 use assets::Assets;
 use camera::GameCamera;
-use macroquad::{miniquad::conf::Icon, prelude::*};
-use player::{Player, PlayerController};
-use ui::{render_debug_ui, render_ui, FpsBarGraph};
+use macroquad:: prelude::*;
+use player::*;
+use ui::*;
 use world::World;
+use utils::conf;
 
 mod assets;
 mod camera;
@@ -33,11 +34,9 @@ async fn main() {
     loop {
         // Update Game
         player.update(&camera, &world.tile_map);
-        world.entities.handle_shooting(&assets, &player, &camera, &world.tile_map);
+        world.update(&player, &camera, &assets);
         camera.handle_controls();
         camera.pan_to_target(player.pos);
-
-        world.entities.update(&player, &camera);
 
         if is_key_down(KeyCode::LeftControl) && is_key_pressed(KeyCode::T) {
             debug_on = !debug_on;
@@ -70,20 +69,5 @@ async fn main() {
         }
 
         next_frame().await;
-    }
-}
-
-fn conf() -> Conf {
-    Conf {
-        window_title: String::from("Top down shooter"),
-        window_width: 1260,
-        window_height: 768,
-        fullscreen: false,
-        icon: Some(Icon {
-            small: [0; 1024],
-            medium: [0; 4096],
-            big: [0; 16384],
-        }),
-        ..Default::default()
     }
 }

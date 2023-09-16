@@ -78,16 +78,16 @@ impl EntityManager {
             && is_mouse_button_down(MouseButton::Right);
 
         if is_shooting {
-            for _ in 0..player.gun.bullets_per_shot {
-                let bullet_speed = player.gun.bullet_speed
-                    + rand::gen_range(-player.gun.bullet_spread, player.gun.bullet_spread); // Apply speed spread
+            for _ in 0..player.inventory.gun.bullets_per_shot {
+                let bullet_speed = player.inventory.gun.bullet_speed
+                    + rand::gen_range(-player.inventory.gun.bullet_spread, player.inventory.gun.bullet_spread); // Apply speed spread
 
                 let mouse_pos: Vec2 = mouse_position().into();
                 let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
                 let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
 
                 let (barrel_offset_x, barrel_offset_y) =
-                    (player.gun.barrel_offset.x, player.gun.barrel_offset.y);
+                    (player.inventory.gun.barrel_offset.x, player.inventory.gun.barrel_offset.y);
 
                 let bullet_pos = Vec2 {
                     x: player.pos.x + barrel_offset_x * -angle.cos()
@@ -105,7 +105,7 @@ impl EntityManager {
                     new_angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
                 }
 
-                new_angle += rand::gen_range(-player.gun.bullet_spread, player.gun.bullet_spread);
+                new_angle += rand::gen_range(-player.inventory.gun.bullet_spread, player.inventory.gun.bullet_spread);
 
                 self.bullets.push(Bullet {
                     pos: bullet_pos,
