@@ -63,11 +63,13 @@ fn draw_rect_lines(rect: &Rect, thickness: f32, color: Color) {
 }
 
 pub fn render_ui(player: &Player) {
+    let edge_offset = 25.0;
+    let (health_bar_w, health_bar_h) = (330.0, 25.0);
     let health_bar = Rect {
-        x: screen_width() * 0.03,
-        y: screen_height() - screen_height() / 12.0,
-        w: screen_width() / 4.5,
-        h: screen_height() / 45.0,
+        x: 25.0,
+        y: screen_height() - health_bar_h * 2.0 - edge_offset,
+        w: health_bar_w,
+        h: health_bar_h,
     };
 
     let stamina_bar = Rect {
@@ -99,6 +101,26 @@ pub fn render_ui(player: &Player) {
 
     draw_rect(&filled_stamina_bar, stamina_bar_color);
     draw_rect_lines(&stamina_bar, 3.0, BLACK);
+
+    let (primary_rect_w, primary_rect_h) = (225.0, 65.0);
+    let gun_backdrop = Color::new(0.15, 0.15, 0.15, 0.65);
+    let buffer = 12.0;
+    let primary_gun_rect = Rect {
+        x: screen_width() - primary_rect_w * 2.0 - buffer - edge_offset,
+        y: screen_height() - primary_rect_h - edge_offset,
+        w: primary_rect_w,
+        h: primary_rect_h,
+    };
+
+    let secondary_gun_rect = Rect {
+        x: primary_gun_rect.x + primary_rect_w + buffer,
+        y: screen_height() - primary_rect_h - edge_offset,
+        w: primary_rect_w,
+        h: primary_rect_h,
+    };
+
+    draw_rect(&primary_gun_rect, gun_backdrop);
+    draw_rect(&secondary_gun_rect, gun_backdrop);
 }
 
 pub fn render_debug_ui(player: &Player, camera: &GameCamera, world: &TileMap) {

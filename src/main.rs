@@ -1,5 +1,8 @@
+use std::f32::consts::PI;
+
 use assets::Assets;
 use camera::GameCamera;
+use entities::Bullet;
 use macroquad:: prelude::*;
 use player::*;
 use ui::*;
@@ -48,9 +51,20 @@ async fn main() {
         set_camera(&camera);
 
         world.draw(&camera, &player, &assets);
-
         // Draw player
         player.draw(&assets);
+
+        if is_key_pressed(KeyCode::G) {
+            for _ in 0..60 {
+                world.entities.bullets.push(Bullet {
+                    pos: camera.screen_to_world(mouse_position().into()),
+                    last_pos: camera.screen_to_world(mouse_position().into()),
+                    vel: 3.2 + rand::gen_range(-1.5, 1.5),
+                    angle: rand::gen_range(0.0, 2.0*PI),
+                    hit_something: false,
+                })
+            }
+        }
 
         // Draw debug thingys
         if debug_on {

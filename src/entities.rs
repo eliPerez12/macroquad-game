@@ -4,6 +4,16 @@ use macroquad::{
     prelude::*,
 };
 
+#[derive(Clone)]
+pub struct Bullet {
+    pub pos: Vec2,
+    pub vel: f32,
+    pub angle: f32,
+    pub hit_something: bool,
+    pub last_pos: Vec2,
+}
+
+
 pub struct EntityManager {
     pub other_players: Vec<Option<Player>>,
     pub other_player_index: u32,
@@ -23,6 +33,16 @@ impl EntityManager {
             other_player.turn_to_face(player.pos, camera);
         }
     }
+
+    pub fn point_collides_with_entity(&self, point: Vec2) -> bool {
+        for player in self.other_players.iter().flatten() {
+            if player.get_hitbox().contains(point) {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn draw_entities(
         &self,
         assets: &Assets,
@@ -37,7 +57,8 @@ impl EntityManager {
         );
         // Draw bullets
         for bullet in &self.bullets {
-            draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
+            //draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
+            draw_line(bullet.pos.x, bullet.pos.y, bullet.last_pos.x, bullet.last_pos.y, 0.18, WHITE);
         }
         // Draw players
         for other_player in self.other_players.iter().flatten() {
@@ -112,6 +133,7 @@ impl EntityManager {
                     vel: bullet_speed,
                     hit_something: false,
                     angle: new_angle,
+                    last_pos: bullet_pos
                 });
             }
             play_sound(
@@ -121,6 +143,7 @@ impl EntityManager {
         }
 
         for bullet in &mut *self.bullets {
+            bullet.last_pos = bullet.pos;
             let drag = 0.15 * get_frame_time() * 60.0;
             if bullet.vel >= 0.0 {
                 bullet.vel -= drag;
@@ -135,19 +158,14 @@ impl EntityManager {
             ) * get_frame_time()
                 * 60.0;
 
-            if bullet.vel.abs() < 0.80 {
+            if bullet.vel.abs() < 0.60 {
                 bullet.hit_something = true
             }
         }
-        self.bullets.retain(|bullet| !bullet.hit_something);
+        let mut new_bullets = self.bullets.clone();
+        new_bullets.retain(|bullet| !bullet.hit_something && !self.point_collides_with_entity(bullet.pos));
+        self.bullets = new_bullets;
         self.bullets
             .retain(|bullet| !tile_map.point_collides_with_tile(bullet.pos));
     }
-}
-
-pub struct Bullet {
-    pub pos: Vec2,
-    pub vel: f32,
-    pub angle: f32,
-    pub hit_something: bool,
 }
