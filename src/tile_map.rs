@@ -66,7 +66,7 @@ impl TileMap {
     }
 
     pub fn find_tiles(&self, angles: Vec<f32>, length: f32, origin: Vec2) -> HashSet<(u16, u16)> {
-        let mut tiles = HashSet::new();
+        let mut tiles = HashSet::with_capacity(700);
         for angle in angles {
             tiles.extend(self.find_tiles_for_ray(angle, origin, length));
         }
@@ -74,7 +74,7 @@ impl TileMap {
     }
 
     fn find_tiles_for_ray(&self, angle: f32, origin: Vec2, length: f32) -> Vec<(u16, u16)> {
-        let mut tiles = Vec::new();
+        let mut tiles = Vec::with_capacity(30);
         let (mut x, mut y) = (origin.x / 8.0, origin.y / 8.0);
 
         let dx = angle.cos();
@@ -127,6 +127,7 @@ impl TileMap {
             }
         }
         tiles
+
     }
 
     pub fn draw(&self, assets: &Assets, player: &Player, camera: &GameCamera) {

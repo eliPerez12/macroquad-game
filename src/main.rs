@@ -31,7 +31,7 @@ async fn main() {
 
     player.controller = PlayerController::User; // Allow control from the user
     camera.target = player.pos; // Teleport camera to player
-    world.entities.add_player(Player::new(49, 48)); // Spawn AI player
+    world.entities.add_player(Player::new(48, 48)); // Spawn AI player
 
     // Main game loop
     loop {
@@ -59,7 +59,7 @@ async fn main() {
                 world.entities.bullets.push(Bullet {
                     pos: camera.screen_to_world(mouse_position().into()),
                     last_pos: camera.screen_to_world(mouse_position().into()),
-                    vel: 3.2 + rand::gen_range(-1.5, 1.5),
+                    vel: 3.3 + rand::gen_range(-1.5, 1.5),
                     angle: rand::gen_range(0.0, 2.0*PI),
                     hit_something: false,
                 })
