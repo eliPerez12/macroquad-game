@@ -1,4 +1,9 @@
-use crate::{assets::Assets, camera::GameCamera, player::Player, tile_map::TileMap};
+use crate::{
+    assets::Assets,
+    camera::GameCamera,
+    player::Player,
+    tile_map::{LineSegment, TileMap},
+};
 use macroquad::{
     audio::{play_sound, PlaySoundParams},
     prelude::*,
@@ -12,7 +17,6 @@ pub struct Bullet {
     pub hit_something: bool,
     pub last_pos: Vec2,
 }
-
 
 pub struct EntityManager {
     pub other_players: Vec<Option<Player>>,
@@ -28,27 +32,23 @@ impl EntityManager {
             bullets: vec![],
         }
     }
+
     pub fn update(&mut self, player: &Player, camera: &GameCamera) {
         for other_player in self.other_players.iter_mut().flatten() {
             other_player.turn_to_face(player.pos, camera);
         }
     }
 
-    pub fn point_collides_with_entity(&self, point: Vec2) -> bool {
+    fn line_collides_with_entity(&self, line: &LineSegment) -> bool {
         for player in self.other_players.iter().flatten() {
-            if player.get_hitbox().contains(point) {
+            if line.line_intersects_rect(player.get_hitbox()) {
                 return true;
             }
         }
         false
     }
 
-    pub fn draw_entities(
-        &self,
-        assets: &Assets,
-        player: &Player,
-        tile_map: &TileMap,
-    ) {
+    pub fn draw_entities(&self, assets: &Assets, player: &Player, tile_map: &TileMap) {
         // Get tiles visible to camera
         let visible_tiles = tile_map.find_tiles(
             player.get_player_rays(std::f32::consts::PI, crate::world::LINE_LENGTH),
@@ -58,7 +58,14 @@ impl EntityManager {
         // Draw bullets
         for bullet in &self.bullets {
             //draw_circle(bullet.pos.x, bullet.pos.y, 0.2, WHITE);
-            draw_line(bullet.pos.x, bullet.pos.y, bullet.last_pos.x, bullet.last_pos.y, 0.18, WHITE);
+            draw_line(
+                bullet.pos.x,
+                bullet.pos.y,
+                bullet.last_pos.x,
+                bullet.last_pos.y,
+                0.18,
+                WHITE,
+            );
         }
         // Draw players
         for other_player in self.other_players.iter().flatten() {
@@ -101,14 +108,19 @@ impl EntityManager {
         if is_shooting {
             for _ in 0..player.inventory.gun.bullets_per_shot {
                 let bullet_speed = player.inventory.gun.bullet_speed
-                    + rand::gen_range(-player.inventory.gun.bullet_spread, player.inventory.gun.bullet_spread); // Apply speed spread
+                    + rand::gen_range(
+                        -player.inventory.gun.bullet_spread,
+                        player.inventory.gun.bullet_spread,
+                    ); // Apply speed spread
 
                 let mouse_pos: Vec2 = mouse_position().into();
                 let mouse_dist_center = mouse_pos - camera.world_to_screen(player.pos);
                 let angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
 
-                let (barrel_offset_x, barrel_offset_y) =
-                    (player.inventory.gun.barrel_offset.x, player.inventory.gun.barrel_offset.y);
+                let (barrel_offset_x, barrel_offset_y) = (
+                    player.inventory.gun.barrel_offset.x,
+                    player.inventory.gun.barrel_offset.y,
+                );
 
                 let bullet_pos = Vec2 {
                     x: player.pos.x + barrel_offset_x * -angle.cos()
@@ -126,14 +138,17 @@ impl EntityManager {
                     new_angle = f32::atan2(mouse_dist_center.x, mouse_dist_center.y);
                 }
 
-                new_angle += rand::gen_range(-player.inventory.gun.bullet_spread, player.inventory.gun.bullet_spread);
+                new_angle += rand::gen_range(
+                    -player.inventory.gun.bullet_spread,
+                    player.inventory.gun.bullet_spread,
+                );
 
                 self.bullets.push(Bullet {
                     pos: bullet_pos,
                     vel: bullet_speed,
                     hit_something: false,
                     angle: new_angle,
-                    last_pos: bullet_pos
+                    last_pos: bullet_pos,
                 });
             }
             play_sound(
@@ -158,14 +173,29 @@ impl EntityManager {
             ) * get_frame_time()
                 * 60.0;
 
-            if bullet.vel.abs() < 0.60 {
+            if bullet.vel.abs() <= 0.00 {
                 bullet.hit_something = true
             }
         }
         let mut new_bullets = self.bullets.clone();
-        new_bullets.retain(|bullet| !bullet.hit_something && !self.point_collides_with_entity(bullet.pos));
+        new_bullets.retain(|bullet| {
+            !bullet.hit_something
+                && !self.line_collides_with_entity(&LineSegment {
+                    x1: bullet.last_pos.x,
+                    x2: bullet.pos.x,
+                    y1: bullet.last_pos.y,
+                    y2: bullet.pos.y,
+                })
+        });
         self.bullets = new_bullets;
-        self.bullets
-            .retain(|bullet| !tile_map.point_collides_with_tile(bullet.pos));
+        self.bullets.retain(|bullet| {
+            !tile_map.line_collides_with_tile(&LineSegment {
+                x1: bullet.last_pos.x,
+                x2: bullet.pos.x,
+                y1: bullet.last_pos.y,
+                y2: bullet.pos.y,
+            })
+        });
+        //self.bullets.retain(|bullet| !tile_map._point_collides_with_tile(bullet.pos));
     }
 }

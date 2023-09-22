@@ -1,9 +1,9 @@
 use crate::{
     camera::GameCamera,
     items::Item,
+    tile_map::TileMap,
     utils::draw_rect,
     world::{ANGLE_PERIPHERAL_FACTOR, LINE_LENGTH, RAY_AMOUNT},
-    tile_map::TileMap,
     Assets,
 };
 use macroquad::prelude::*;

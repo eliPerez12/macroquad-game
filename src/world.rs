@@ -1,6 +1,6 @@
 use crate::{
-    assets::Assets, camera::GameCamera, player::Player,
-    entities::EntityManager, maps, tile_map::TileMap,
+    assets::Assets, camera::GameCamera, entities::EntityManager, maps, player::Player,
+    tile_map::TileMap,
 };
 use macroquad::prelude::*;
 
@@ -19,11 +19,15 @@ pub struct World {
 
 impl World {
     pub fn new() -> Self {
-        World { tile_map: maps::example_world(), entities: EntityManager::new() }
+        World {
+            tile_map: maps::example_world(),
+            entities: EntityManager::new(),
+        }
     }
 
     pub fn update(&mut self, player: &Player, camera: &GameCamera, assets: &Assets) {
-        self.entities.handle_shooting(assets, player, camera, &self.tile_map);
+        self.entities
+            .handle_shooting(assets, player, camera, &self.tile_map);
         self.entities.update(player, camera);
     }
 

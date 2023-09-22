@@ -1,7 +1,20 @@
+use crate::{
+    assets::Assets,
+    camera::GameCamera,
+    maps::TILE_COLLIDER_LOOKUP,
+    player::Player,
+    utils::draw_rect,
+    world::{ANGLE_PERIPHERAL_FACTOR, LINE_LENGTH},
+};
+use macroquad::prelude::*;
 use std::collections::HashSet;
 
-use macroquad::prelude::*;
-use crate::{maps::TILE_COLLIDER_LOOKUP, world::{ANGLE_PERIPHERAL_FACTOR, LINE_LENGTH}, player::Player, camera::GameCamera, assets::Assets, utils::draw_rect};
+pub struct LineSegment {
+    pub x1: f32,
+    pub y1: f32,
+    pub x2: f32,
+    pub y2: f32,
+}
 
 pub struct TileMap {
     pub data: Vec<u32>,
@@ -9,29 +22,98 @@ pub struct TileMap {
     pub height: u16,
 }
 
+impl LineSegment {
+    // Check if two line segments intersect
+    fn line_segments_intersect(&self, b: &LineSegment) -> Option<Vec2> {
+        let a = self;
+        let denominator = (a.y2 - a.y1) * (b.x2 - b.x1) - (a.x2 - a.x1) * (b.y2 - b.y1);
+        if denominator == 0.0 {
+            return None;
+        }
+
+        let ua = ((a.x2 - a.x1) * (b.y1 - a.y1) - (a.y2 - a.y1) * (b.x1 - a.x1)) / denominator;
+        let ub = ((b.x2 - b.x1) * (b.y1 - a.y1) - (b.y2 - b.y1) * (b.x1 - a.x1)) / denominator;
+
+        if (0.0..=1.0).contains(&ua) && (0.0..=1.0).contains(&ub) {
+            let x = a.x1 + ua * (a.x2 - a.x1);
+            let y = a.y1 + ua * (a.y2 - a.y1);
+            return Some((x, y).into());
+        }
+        None
+    }
+
+    // returns lines from a rectangle (left, right, top, bottom)
+    pub fn from_rect(rect: &Rect) -> (LineSegment, LineSegment, LineSegment, LineSegment) {
+        (
+            LineSegment {
+                x1: rect.x,
+                y1: rect.y,
+                x2: rect.x,
+                y2: rect.y + rect.h,
+            },
+            LineSegment {
+                x1: rect.x + rect.w,
+                y1: rect.y,
+                x2: rect.x + rect.w,
+                y2: rect.y + rect.h,
+            },
+            LineSegment {
+                x1: rect.x,
+                y1: rect.y,
+                x2: rect.x + rect.w,
+                y2: rect.y,
+            },
+            LineSegment {
+                x1: rect.x,
+                y1: rect.y + rect.h,
+                x2: rect.x + rect.w,
+                y2: rect.y + rect.h,
+            },
+        )
+    }
+
+    // Check if a line segment intersects with a rectangle
+    pub fn line_intersects_rect(&self, rect: Rect) -> bool {
+        // Edges of the rectangle
+        let (left, right, top, bottom) = LineSegment::from_rect(&rect);
+
+        self.line_segments_intersect(&left).is_some()
+            || self.line_segments_intersect(&right).is_some()
+            || self.line_segments_intersect(&top).is_some()
+            || self.line_segments_intersect(&bottom).is_some()
+    }
+
+    pub fn draw(&self, color: Color) {
+        draw_line(self.x1, self.y1, self.x2, self.y2, 0.28, color);
+    }
+}
+
 impl TileMap {
     pub fn rect_collides_with_tile(&self, rect: Rect) -> bool {
         for index in 0..(self.width * self.height) {
-            let tile = self
-                .get_tile(index % self.width, index / self.width)
-                .unwrap()
-                .0;
+            if let Some(tile) = self.get_tile(index % self.width, index / self.width) {
+                if TILE_COLLIDER_LOOKUP
+                    .get((tile.0 - 1) as usize)
+                    .unwrap_or(&false)
+                    == &false
+                {
+                    continue;
+                }
 
-            if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
-                continue;
-            }
-            let tile_grid_x = index % self.width;
-            let tile_grid_y = index / self.width;
-            let tile_rect = Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
+                let tile_grid_x = index % self.width;
+                let tile_grid_y = index / self.width;
+                let tile_rect =
+                    Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
 
-            if rect.intersect(tile_rect).is_some() {
-                return true;
+                if rect.intersect(tile_rect).is_some() {
+                    return true;
+                }
             }
         }
         false
     }
 
-    pub fn point_collides_with_tile(&self, point: Vec2) -> bool {
+    pub fn _point_collides_with_tile(&self, point: Vec2) -> bool {
         for index in 0..(self.width * self.height) {
             let tile = self
                 .get_tile(index % self.width, index / self.width)
@@ -51,8 +133,27 @@ impl TileMap {
         false
     }
 
+    pub fn line_collides_with_tile(&self, line: &LineSegment) -> bool {
+        for i in 0..self.data.len() {
+            if let Some(tile) = self.get_tile(i as u16 % self.width, i as u16 / self.width) {
+                if let Some(is_collider) = TILE_COLLIDER_LOOKUP.get(tile.0 as usize -1) {
+                    let intercets = line.line_intersects_rect(Rect {
+                        x: (i as u16 % self.width) as f32 * 8.0,
+                        y: (i as u16 / self.width) as f32 * 8.0,
+                        w: 8.0,
+                        h: 8.0,
+                    });
+                    if *is_collider && intercets {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
     // Returns (tile_id, flip_x, flip_y, rotate)
-    fn get_tile(&self, grid_x: u16, grid_y: u16) -> Option<(u32, bool, bool, bool)> {
+    pub fn get_tile(&self, grid_x: u16, grid_y: u16) -> Option<(u32, bool, bool, bool)> {
         self.data
             .get((grid_x + grid_y * self.width) as usize)
             .map(|tile| {
@@ -101,20 +202,13 @@ impl TileMap {
         let mut reached_length = 0.0;
 
         while reached_length < length {
-            if x < 0.0 || y < 0.0 || x > self.width as f32 * 8.0 || y > self.height as f32 * 8.0 {
-                break;
-            }
-
             let tile_x = x as u16;
             let tile_y = y as u16;
-
-            if tile_x < self.width && tile_y < self.height {
-                let tile_id = self.data[(tile_x + tile_y * self.width) as usize] & 0x1FFFFFFF;
-                if TILE_COLLIDER_LOOKUP[((tile_id) - 1) as usize] {
-                    break;
-                }
-                tiles.push((tile_x, tile_y));
+            let tile_id = self.data[(tile_x + tile_y * self.width) as usize] & 0x1FFFFFFF;
+            if TILE_COLLIDER_LOOKUP[((tile_id) - 1) as usize] {
+                break;
             }
+            tiles.push((tile_x, tile_y));
 
             if side_dist_x < side_dist_y {
                 side_dist_x += delta_dist_x;
@@ -127,7 +221,6 @@ impl TileMap {
             }
         }
         tiles
-
     }
 
     pub fn draw(&self, assets: &Assets, player: &Player, camera: &GameCamera) {
