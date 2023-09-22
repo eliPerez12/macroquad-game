@@ -9,6 +9,7 @@ use crate::{
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
+
 pub struct LineSegment {
     pub x1: f32,
     pub y1: f32,
@@ -18,6 +19,7 @@ pub struct LineSegment {
 
 pub struct TileMap {
     pub data: Vec<u32>,
+    pub collidables: HashSet<(u16, u16)>,
     pub width: u16,
     pub height: u16,
 }
@@ -90,8 +92,8 @@ impl LineSegment {
 
 impl TileMap {
     pub fn rect_collides_with_tile(&self, rect: Rect) -> bool {
-        for index in 0..(self.width * self.height) {
-            if let Some(tile) = self.get_tile(index % self.width, index / self.width) {
+        for (grid_x, grid_y) in self.collidables.iter() {
+            if let Some(tile) = self.get_tile(*grid_x, *grid_y) {
                 if TILE_COLLIDER_LOOKUP
                     .get((tile.0 - 1) as usize)
                     .unwrap_or(&false)
@@ -100,10 +102,8 @@ impl TileMap {
                     continue;
                 }
 
-                let tile_grid_x = index % self.width;
-                let tile_grid_y = index / self.width;
                 let tile_rect =
-                    Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
+                    Rect::new(*grid_x as f32 * 8.0, *grid_y as f32 * 8.0, 8.0, 8.0);
 
                 if rect.intersect(tile_rect).is_some() {
                     return true;
@@ -113,33 +113,13 @@ impl TileMap {
         false
     }
 
-    pub fn _point_collides_with_tile(&self, point: Vec2) -> bool {
-        for index in 0..(self.width * self.height) {
-            let tile = self
-                .get_tile(index % self.width, index / self.width)
-                .unwrap()
-                .0;
-            if !TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
-                continue;
-            }
-            let tile_grid_x = index % self.width;
-            let tile_grid_y = index / self.width;
-            let tile_rect = Rect::new(tile_grid_x as f32 * 8.0, tile_grid_y as f32 * 8.0, 8.0, 8.0);
-
-            if tile_rect.contains(point) {
-                return true;
-            }
-        }
-        false
-    }
-
     pub fn line_collides_with_tile(&self, line: &LineSegment) -> bool {
-        for i in 0..self.data.len() {
-            if let Some(tile) = self.get_tile(i as u16 % self.width, i as u16 / self.width) {
+        for (grid_x, grid_y) in self.collidables.iter(){
+            if let Some(tile) = self.get_tile(*grid_x, *grid_y) {
                 if let Some(is_collider) = TILE_COLLIDER_LOOKUP.get(tile.0 as usize -1) {
                     let intercets = line.line_intersects_rect(Rect {
-                        x: (i as u16 % self.width) as f32 * 8.0,
-                        y: (i as u16 / self.width) as f32 * 8.0,
+                        x: *grid_x as f32 * 8.0,
+                        y: *grid_y as f32 * 8.0,
                         w: 8.0,
                         h: 8.0,
                     });
@@ -299,12 +279,28 @@ impl TileMap {
 
     pub fn draw_collidables(&self, camera: &GameCamera) {
         for (grid_x, grid_y) in camera.get_visible_tiles(self) {
-            let tile = self.get_tile(grid_x, grid_y).unwrap().0;
-            if TILE_COLLIDER_LOOKUP[(tile - 1) as usize] {
-                draw_rect(
-                    Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
-                    Color::new(1.0, 0.0, 0.3, 0.75),
-                )
+            let tile = self.get_tile(grid_x, grid_y);
+            if let Some(tile) = tile {
+                if TILE_COLLIDER_LOOKUP[tile.0 as usize - 1] {
+                    draw_rect(
+                        Rect::new(grid_x as f32 * 8.0, grid_y as f32 * 8.0, 8.0, 8.0),
+                        Color::new(1.0, 0.0, 0.3, 0.75),
+                    );
+                    let rect = Rect {
+                        x: grid_x as f32 * 8.0,
+                        y: grid_y as f32 * 8.0,
+                        w: 8.0,
+                        h: 8.0,
+                    };
+
+                    let (left, right, top, bottom) =  LineSegment::from_rect(&rect);
+                    let color = ORANGE;
+                    left.draw(color);
+                    right.draw(color);
+                    top.draw(color);
+                    bottom.draw(color);
+
+                }
             }
         }
     }

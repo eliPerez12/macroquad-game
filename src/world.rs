@@ -1,6 +1,6 @@
 use crate::{
-    assets::Assets, camera::GameCamera, entities::EntityManager, maps, player::Player,
-    tile_map::TileMap,
+    assets::Assets, camera::GameCamera, entities::EntityManager, player::Player,
+    tile_map::TileMap, maps,
 };
 use macroquad::prelude::*;
 

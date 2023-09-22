@@ -1,12 +1,10 @@
-use std::f32::consts::{PI, E};
+use std::f32::consts::PI;
 
 use assets::Assets;
 use camera::GameCamera;
 use entities::Bullet;
 use macroquad::prelude::*;
-use maps::TILE_COLLIDER_LOOKUP;
 use player::*;
-use tile_map::LineSegment;
 use ui::*;
 use utils::conf;
 use world::World;
@@ -72,30 +70,6 @@ async fn main() {
         if debug_on {
             player.draw_hitbox();
             world.draw_debug(&camera);
-            for i in 0..world.tile_map.data.len() {
-                let (grid_x, grid_y) = (
-                    i as u16 % world.tile_map.width,
-                    i as u16 / world.tile_map.height,
-                );
-                let tile = world.tile_map.get_tile(grid_x, grid_y);
-                if let Some(tile) = tile {
-                    if TILE_COLLIDER_LOOKUP[tile.0 as usize - 1] {
-                        let rect = Rect {
-                            x: grid_x as f32 * 8.0,
-                            y: grid_y as f32 * 8.0,
-                            w: 8.0,
-                            h: 8.0,
-                        };
-
-                        let (left, right, top, bottom) =  LineSegment::from_rect(&rect);
-                        let color = ORANGE;
-                        left.draw(color);
-                        right.draw(color);
-                        top.draw(color);
-                        bottom.draw(color);
-                    }
-                }
-            }
         }
 
         ////// Draw in screen space //////
