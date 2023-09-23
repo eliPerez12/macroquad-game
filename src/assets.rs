@@ -1,14 +1,14 @@
 use crate::utils::is_windows;
 use image::{DynamicImage, GenericImageView};
-use macroquad::{
-    audio::{load_sound, Sound},
-    prelude::*,
-};
-use std::collections::HashMap;
+use macroquad::prelude::*;
+use rodio::{OutputStream, OutputStreamHandle, Sink, Decoder};
+use std::{collections::HashMap, io::{Cursor, BufReader}};
 
 pub struct Assets {
     textures: HashMap<String, Texture2D>,
-    sounds: HashMap<String, Sound>,
+    sounds: HashMap<String, Vec<u8>>,
+    audio_handle: OutputStreamHandle,
+    _audio_stream: OutputStream,
 }
 
 impl Assets {
@@ -20,9 +20,23 @@ impl Assets {
         }
     }
 
-    pub fn get_sound(&self, sound: &str) -> &Sound {
-        self.sounds.get(sound).unwrap()
+    pub fn play_sound(&self, sound_name: &str) {
+        if let Some(sound) = self.sounds.get(sound_name) {
+            let sound = sound.clone();  // clone the data if needed
+            let sink = Sink::try_new(&self.audio_handle).unwrap();
+            let cursor = Cursor::new(sound);
+
+            if let Ok(source) = Decoder::new(BufReader::new(cursor)) {
+                sink.append(source);
+                sink.detach();
+            } else {
+                println!("Failed to decode sound");
+            }
+        } else {
+            println!("Sound '{}' not found.", sound_name);
+        }
     }
+    
 
     async fn load_texture(path: &str) -> Result<Texture2D, macroquad::Error> {
         let texture = Texture2D::from_image(&load_image(path).await?);
@@ -33,7 +47,7 @@ impl Assets {
     // Stack based search through assets folder, and loads in all assets
     pub async fn load_all_assets() -> Self {
         let mut textures: HashMap<String, Texture2D> = HashMap::new();
-        let mut sounds: HashMap<String, Sound> = HashMap::new();
+        let mut sounds: HashMap<String, Vec<u8>> = HashMap::new();
         let mut dirs_to_explore = vec![std::path::PathBuf::from("assets")];
 
         while let Some(dir) = dirs_to_explore.pop() {
@@ -61,13 +75,15 @@ impl Assets {
                             true => path_str.split('\\').last().unwrap(),
                             false => path_str.split('/').last().unwrap(),
                         };
-                        let sound = load_sound(&path_str).await.unwrap();
-                        sounds.insert(key_path_str.to_string(), sound);
+                        let sound_bytes: Vec<u8> = load_file(&path_str).await.unwrap();
+                            dbg!(key_path_str);
+                            sounds.insert(key_path_str.to_string(), sound_bytes);
                     }
                 }
             }
-        }
-        Assets { textures, sounds }
+        };
+        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+        Assets { textures, sounds, _audio_stream: _stream, audio_handle: stream_handle}
     }
 
     pub async fn new() -> Self {

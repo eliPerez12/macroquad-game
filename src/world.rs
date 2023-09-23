@@ -1,6 +1,6 @@
 use crate::{
-    assets::Assets, camera::GameCamera, entities::EntityManager, player::Player,
-    tile_map::TileMap, maps,
+    assets::Assets, camera::GameCamera, entities::EntityManager, maps, player::Player,
+    tile_map::TileMap,
 };
 use macroquad::prelude::*;
 
@@ -25,9 +25,9 @@ impl World {
         }
     }
 
-    pub fn update(&mut self, player: &Player, camera: &GameCamera, assets: &Assets) {
+    pub async fn update(&mut self, player: &Player, camera: &GameCamera, assets: &Assets) {
         self.entities
-            .handle_shooting(assets, player, camera, &self.tile_map);
+            .handle_shooting(assets, player, camera, &self.tile_map).await;
         self.entities.update(player, camera);
     }
 

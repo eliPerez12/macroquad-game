@@ -9,7 +9,6 @@ use crate::{
 use macroquad::prelude::*;
 use std::collections::HashSet;
 
-
 pub struct LineSegment {
     pub x1: f32,
     pub y1: f32,
@@ -102,8 +101,7 @@ impl TileMap {
                     continue;
                 }
 
-                let tile_rect =
-                    Rect::new(*grid_x as f32 * 8.0, *grid_y as f32 * 8.0, 8.0, 8.0);
+                let tile_rect = Rect::new(*grid_x as f32 * 8.0, *grid_y as f32 * 8.0, 8.0, 8.0);
 
                 if rect.intersect(tile_rect).is_some() {
                     return true;
@@ -114,9 +112,9 @@ impl TileMap {
     }
 
     pub fn line_collides_with_tile(&self, line: &LineSegment) -> bool {
-        for (grid_x, grid_y) in self.collidables.iter(){
+        for (grid_x, grid_y) in self.collidables.iter() {
             if let Some(tile) = self.get_tile(*grid_x, *grid_y) {
-                if let Some(is_collider) = TILE_COLLIDER_LOOKUP.get(tile.0 as usize -1) {
+                if let Some(is_collider) = TILE_COLLIDER_LOOKUP.get(tile.0 as usize - 1) {
                     let intercets = line.line_intersects_rect(Rect {
                         x: *grid_x as f32 * 8.0,
                         y: *grid_y as f32 * 8.0,
@@ -293,13 +291,12 @@ impl TileMap {
                         h: 8.0,
                     };
 
-                    let (left, right, top, bottom) =  LineSegment::from_rect(&rect);
+                    let (left, right, top, bottom) = LineSegment::from_rect(&rect);
                     let color = ORANGE;
                     left.draw(color);
                     right.draw(color);
                     top.draw(color);
                     bottom.draw(color);
-
                 }
             }
         }

@@ -367,24 +367,23 @@ pub fn example_world() -> TileMap {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         ],
         collidables: HashSet::new(),
-    }.generate_collidables()
+    }
+    .generate_collidables()
 }
 
 impl TileMap {
     pub fn generate_collidables(mut self) -> TileMap {
         for i in 0..self.data.len() {
-            let (grid_x, grid_y) = ( i as u16 % self.width, i as u16 / self.height);
+            let (grid_x, grid_y) = (i as u16 % self.width, i as u16 / self.height);
             if let Some(tile) = self.get_tile(grid_x, grid_y) {
                 if TILE_COLLIDER_LOOKUP[tile.0 as usize - 1] {
                     self.collidables.insert((grid_x, grid_y));
                 }
             }
-            
         }
         self
     }
 }
-
 
 pub const TILE_COLLIDER_LOOKUP: [bool; 8 * 10] = [
     false, true, false, false, false, false, false, false, false, false, false, false, false, true,

@@ -1,8 +1,6 @@
-use std::f32::consts::PI;
-
 use assets::Assets;
 use camera::GameCamera;
-use entities::Bullet;
+use entities::{Bullet, Grenade};
 use macroquad::prelude::*;
 use player::*;
 use ui::*;
@@ -31,13 +29,20 @@ async fn main() {
 
     player.controller = PlayerController::User; // Allow control from the user
     camera.target = player.pos; // Teleport camera to player
-    world.entities.add_player(Player::new(48, 48)); // Spawn AI player
+    world.entities.add_player(Player::new(48, 48)); // Spawn other player
+    world.entities.grenades.push(Grenade {
+        pos: Vec2::new(50.0 * 8.0, 50.0 * 8.0),
+        fuse_time: Grenade::MAX_FUSE_TIME,
+        rotation: 0.0,
+        rotation_speed: 0.1,
+        }
+    );
 
     // Main game loop
     loop {
         // Update Game
         player.update(&camera, &world.tile_map);
-        world.update(&player, &camera, &assets);
+        world.update(&player, &camera, &assets).await;
         camera.handle_controls();
         camera.pan_to_target(player.pos);
 
@@ -47,6 +52,7 @@ async fn main() {
 
         fps_graph.update();
 
+        
         ////// Draw in world space //////
         set_camera(&camera);
 
@@ -60,7 +66,7 @@ async fn main() {
                     pos: camera.screen_to_world(mouse_position().into()),
                     last_pos: camera.screen_to_world(mouse_position().into()),
                     vel: 3.3 + rand::gen_range(-1.5, 1.5),
-                    angle: rand::gen_range(0.0, 2.0 * PI),
+                    angle: rand::gen_range(0.0, 2.0 * std::f32::consts::PI),
                     hit_something: false,
                 })
             }
