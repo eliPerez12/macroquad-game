@@ -76,7 +76,6 @@ impl Assets {
                             false => path_str.split('/').last().unwrap(),
                         };
                         let sound_bytes: Vec<u8> = load_file(&path_str).await.unwrap();
-                            dbg!(key_path_str);
                             sounds.insert(key_path_str.to_string(), sound_bytes);
                     }
                 }

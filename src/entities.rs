@@ -13,7 +13,7 @@ pub struct Bullet {
     pub pos: Vec2,
     pub vel: f32,
     pub angle: f32,
-    pub hit_something: bool,
+    pub hit_something: Option<Vec2>,
     pub last_pos: Vec2,
 }
 
@@ -52,13 +52,13 @@ impl EntityManager {
         }
     }
 
-    fn line_collides_with_entity(&self, line: &LineSegment) -> bool {
+    fn line_collides_with_entity(&self, line: &LineSegment) -> Option<Vec2> {
         for player in self.other_players.iter().flatten() {
-            if line.line_intersects_rect(player.get_hitbox()) {
-                return true;
+            if let Some(intersect) = line.line_intersects_rect(player.get_hitbox()) {
+                return Some(intersect);
             }
         }
-        false
+        None
     }
 
     pub fn draw_entities(&self, assets: &Assets, player: &Player, tile_map: &TileMap) {
@@ -179,12 +179,13 @@ impl EntityManager {
                 self.bullets.push(Bullet {
                     pos: bullet_pos,
                     vel: bullet_speed,
-                    hit_something: false,
+                    hit_something: None,
                     angle: new_angle,
                     last_pos: bullet_pos,
                 });
             }
-            assets.play_sound("sniper1.wav");
+            let sound_name = format!("{}{}", player.inventory.gun.name, "_shooting.wav");
+            assets.play_sound(&sound_name);
         }
 
         // Grenades
@@ -214,28 +215,30 @@ impl EntityManager {
                 * 60.0;
 
             if bullet.vel.abs() <= 0.00 {
-                bullet.hit_something = true
+                bullet.hit_something = Some(Vec2::new(0.0, 0.0))
             }
         }
         let mut new_bullets = self.bullets.clone();
-        new_bullets.retain(|bullet| {
-            !bullet.hit_something
-                && !self.line_collides_with_entity(&LineSegment {
-                    x1: bullet.last_pos.x,
-                    x2: bullet.pos.x,
-                    y1: bullet.last_pos.y,
-                    y2: bullet.pos.y,
-                })
-        });
-        self.bullets = new_bullets;
-        self.bullets.retain(|bullet| {
-            !tile_map.line_collides_with_tile(&LineSegment {
+
+        new_bullets.retain(|bullet| 
+            bullet.hit_something.is_none() && 
+            self.line_collides_with_entity(&LineSegment {
                 x1: bullet.last_pos.x,
                 x2: bullet.pos.x,
                 y1: bullet.last_pos.y,
                 y2: bullet.pos.y,
-            })
-        });
+                }
+            ).is_none()
+        );
+        self.bullets = new_bullets;
+        self.bullets.retain(|bullet|
+            tile_map.line_collides_with_tile(&LineSegment {
+                x1: bullet.last_pos.x,
+                x2: bullet.pos.x,
+                y1: bullet.last_pos.y,
+                y2: bullet.pos.y,
+            }).is_none()
+        );
         self.grenades.retain(|grenade| grenade.fuse_time > 0.0);
     }
 }

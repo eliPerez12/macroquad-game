@@ -67,7 +67,7 @@ async fn main() {
                     last_pos: camera.screen_to_world(mouse_position().into()),
                     vel: 3.3 + rand::gen_range(-1.5, 1.5),
                     angle: rand::gen_range(0.0, 2.0 * std::f32::consts::PI),
-                    hit_something: false,
+                    hit_something: None,
                 })
             }
         }

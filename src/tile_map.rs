@@ -74,14 +74,24 @@ impl LineSegment {
     }
 
     // Check if a line segment intersects with a rectangle
-    pub fn line_intersects_rect(&self, rect: Rect) -> bool {
+    pub fn line_intersects_rect(&self, rect: Rect) -> Option<Vec2> {
         // Edges of the rectangle
         let (left, right, top, bottom) = LineSegment::from_rect(&rect);
 
-        self.line_segments_intersect(&left).is_some()
-            || self.line_segments_intersect(&right).is_some()
-            || self.line_segments_intersect(&top).is_some()
-            || self.line_segments_intersect(&bottom).is_some()
+
+        if let Some(intersect) = self.line_segments_intersect(&left) {
+            return Some(intersect);
+        }
+        if let Some(intersect) = self.line_segments_intersect(&right) {
+            return Some(intersect);
+        } 
+        if let Some(intersect) = self.line_segments_intersect(&top) {
+            return Some(intersect);
+        } 
+        if let Some(intersect) = self.line_segments_intersect(&bottom) {
+            return Some(intersect);
+        }
+        None
     }
 
     pub fn draw(&self, color: Color) {
@@ -111,23 +121,25 @@ impl TileMap {
         false
     }
 
-    pub fn line_collides_with_tile(&self, line: &LineSegment) -> bool {
+    pub fn line_collides_with_tile(&self, line: &LineSegment) -> Option<Vec2> {
         for (grid_x, grid_y) in self.collidables.iter() {
             if let Some(tile) = self.get_tile(*grid_x, *grid_y) {
                 if let Some(is_collider) = TILE_COLLIDER_LOOKUP.get(tile.0 as usize - 1) {
-                    let intercets = line.line_intersects_rect(Rect {
+                    let intersects = line.line_intersects_rect(Rect {
                         x: *grid_x as f32 * 8.0,
                         y: *grid_y as f32 * 8.0,
                         w: 8.0,
                         h: 8.0,
                     });
-                    if *is_collider && intercets {
-                        return true;
+                    if *is_collider {
+                        if let Some(intersects) = intersects {
+                            return Some(intersects);
+                        }
                     }
                 }
             }
         }
-        false
+        None
     }
 
     // Returns (tile_id, flip_x, flip_y, rotate)
