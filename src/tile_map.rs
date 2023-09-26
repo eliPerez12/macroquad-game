@@ -24,24 +24,24 @@ pub struct TileMap {
 }
 
 impl LineSegment {
-    // Check if two line segments intersect
-    fn line_segments_intersect(&self, b: &LineSegment) -> Option<Vec2> {
-        let a = self;
-        let denominator = (a.y2 - a.y1) * (b.x2 - b.x1) - (a.x2 - a.x1) * (b.y2 - b.y1);
-        if denominator == 0.0 {
+    fn line_segments_intersect(&self, line2: &LineSegment) -> Option<Vec2> {
+        let line1 = self;
+        let denominator = (line1.y2 - line1.y1) * (line2.x2 - line2.x1) - (line1.x2 - line1.x1) * (line2.y2 - line2.y1);
+        if denominator.abs() < f32::EPSILON {
             return None;
         }
-
-        let ua = ((a.x2 - a.x1) * (b.y1 - a.y1) - (a.y2 - a.y1) * (b.x1 - a.x1)) / denominator;
-        let ub = ((b.x2 - b.x1) * (b.y1 - a.y1) - (b.y2 - b.y1) * (b.x1 - a.x1)) / denominator;
-
-        if (0.0..=1.0).contains(&ua) && (0.0..=1.0).contains(&ub) {
-            let x = a.x1 + ua * (a.x2 - a.x1);
-            let y = a.y1 + ua * (a.y2 - a.y1);
-            return Some((x, y).into());
+    
+        let alpha = ((line1.x2 - line1.x1) * (line2.y1 - line1.y1) - (line1.y2 - line1.y1) * (line2.x1 - line1.x1)) / denominator;
+        let beta = ((line2.x2 - line2.x1) * (line2.y1 - line1.y1) - (line2.y2 - line2.y1) * (line2.x1 - line1.x1)) / denominator;
+    
+        if (0.0..=1.0).contains(&alpha) && (0.0..=1.0).contains(&beta) {
+            let intersect_x = line1.x1 + alpha * (line1.x2 - line1.x1);
+            let intersect_y = line1.y1 + alpha * (line1.y2 - line1.y1);
+            return Some(Vec2 { x: intersect_x, y: intersect_y });
         }
         None
     }
+    
 
     // returns lines from a rectangle (left, right, top, bottom)
     pub fn from_rect(rect: &Rect) -> (LineSegment, LineSegment, LineSegment, LineSegment) {
@@ -78,16 +78,15 @@ impl LineSegment {
         // Edges of the rectangle
         let (left, right, top, bottom) = LineSegment::from_rect(&rect);
 
-
         if let Some(intersect) = self.line_segments_intersect(&left) {
             return Some(intersect);
         }
         if let Some(intersect) = self.line_segments_intersect(&right) {
             return Some(intersect);
-        } 
+        }
         if let Some(intersect) = self.line_segments_intersect(&top) {
             return Some(intersect);
-        } 
+        }
         if let Some(intersect) = self.line_segments_intersect(&bottom) {
             return Some(intersect);
         }

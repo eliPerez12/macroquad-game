@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::{
     assets::Assets,
     camera::GameCamera,
@@ -7,6 +5,7 @@ use crate::{
     tile_map::{LineSegment, TileMap},
 };
 use macroquad::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone)]
 pub struct Bullet {
@@ -61,16 +60,15 @@ impl EntityManager {
         None
     }
 
-    pub fn draw_entities(&self, assets: &Assets, player: &Player, tile_map: &TileMap) {
+    pub fn draw_entities(&mut self, assets: &Assets, player: &Player, tile_map: &TileMap) {
         let is_visible = |pos: Vec2, visible_tiles: &HashSet<(u16, u16)>| -> bool {
             let dist_to_player = {
-            let dx = pos.x - player.pos.x;
-            let dy = pos.y - player.pos.y;
-            (dx * dx + dy * dy).sqrt() };
-            visible_tiles.contains(&(
-                (pos.x / 8.0) as u16,
-                (pos.y / 8.0) as u16,
-            )) || dist_to_player < 18.0
+                let dx = pos.x - player.pos.x;
+                let dy = pos.y - player.pos.y;
+                (dx * dx + dy * dy).sqrt()
+            };
+            visible_tiles.contains(&((pos.x / 8.0) as u16, (pos.y / 8.0) as u16))
+                || dist_to_player < 18.0
         };
 
         // Get tiles visible to camera
@@ -82,31 +80,48 @@ impl EntityManager {
         // Draw bullets
         for bullet in &self.bullets {
             if is_visible(bullet.pos, &visible_tiles) {
-                draw_line(
-                    bullet.pos.x,
-                    bullet.pos.y,
-                    bullet.last_pos.x,
-                    bullet.last_pos.y,
-                    0.18,
-                    WHITE,
-                );
-            }
+                match bullet.hit_something {
+                    None => {
+                        draw_line(
+                            bullet.pos.x,
+                            bullet.pos.y,
+                            bullet.last_pos.x,
+                            bullet.last_pos.y,
+                            0.18,
+                            WHITE,
+                        );
+                    },
+                    Some(intersect) => {
+                        dbg!(intersect);
+                        draw_circle(intersect.x, intersect.y, 1.0, RED);
+                    },
+                    
+                        //draw_line(
+                    //     intersect.x,
+                    //     intersect.y,
+                    //     bullet.last_pos.x,
+                    //     bullet.last_pos.y,
+                    //     0.18,
+                    //     WHITE,
+                    // )
+                }
+            };
         }
         // Draw grenades
         for grenade in &self.grenades {
             if is_visible(grenade.pos, &visible_tiles) {
-            draw_texture_ex(
-                &assets.get_texture("grenade_unpinned.png"),
-                grenade.pos.x,
-                grenade.pos.y,
-                WHITE,
-                DrawTextureParams {
-                    dest_size: Some(Vec2::new(14.0, 14.0)),
-                    rotation: grenade.rotation,
-                    ..Default::default()
-                },
-            )
-        }
+                draw_texture_ex(
+                    &assets.get_texture("grenade_unpinned.png"),
+                    grenade.pos.x,
+                    grenade.pos.y,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::new(14.0, 14.0)),
+                        rotation: grenade.rotation,
+                        ..Default::default()
+                    },
+                )
+            }
         }
         // Draw players
         for other_player in self.other_players.iter().flatten() {
@@ -136,6 +151,9 @@ impl EntityManager {
         let is_shooting = (is_mouse_button_pressed(MouseButton::Left)
             | is_key_pressed(KeyCode::Space))
             && is_mouse_button_down(MouseButton::Right);
+
+        // Remove old bullets that hit somthing
+        self.bullets.retain(|bullet| bullet.hit_something.is_none());
 
         // Handle spawning bullets
         if is_shooting {
@@ -190,11 +208,10 @@ impl EntityManager {
 
         // Grenades
         for grenade in &mut self.grenades {
-            let fuse_percent = grenade.fuse_time/Grenade::MAX_FUSE_TIME;
+            let fuse_percent = grenade.fuse_time / Grenade::MAX_FUSE_TIME;
             grenade.rotation_speed = Grenade::MAX_ROTATION_SPEED * fuse_percent;
-            grenade.rotation  += grenade.rotation_speed;
+            grenade.rotation += grenade.rotation_speed;
             grenade.fuse_time -= get_frame_time();
-
         }
 
         // Bullets
@@ -213,32 +230,26 @@ impl EntityManager {
                 f32::cos(bullet.angle) * bullet.vel,
             ) * get_frame_time()
                 * 60.0;
-
-            if bullet.vel.abs() <= 0.00 {
-                bullet.hit_something = Some(Vec2::new(0.0, 0.0))
-            }
         }
         let mut new_bullets = self.bullets.clone();
-
-        new_bullets.retain(|bullet| 
-            bullet.hit_something.is_none() && 
-            self.line_collides_with_entity(&LineSegment {
+        new_bullets.iter_mut().for_each(|bullet| {
+            let line = &LineSegment {
                 x1: bullet.last_pos.x,
                 x2: bullet.pos.x,
                 y1: bullet.last_pos.y,
                 y2: bullet.pos.y,
-                }
-            ).is_none()
-        );
+            };
+            if bullet.vel.abs() <= 0.00 {
+                bullet.hit_something = Some(bullet.pos);
+            }
+            else if let Some(intersect) = tile_map.line_collides_with_tile(line) {
+                bullet.hit_something = Some(intersect);
+            }
+            else if let Some(intersect) = self.line_collides_with_entity(line) {
+                bullet.hit_something = Some(intersect);
+            }
+        });
         self.bullets = new_bullets;
-        self.bullets.retain(|bullet|
-            tile_map.line_collides_with_tile(&LineSegment {
-                x1: bullet.last_pos.x,
-                x2: bullet.pos.x,
-                y1: bullet.last_pos.y,
-                y2: bullet.pos.y,
-            }).is_none()
-        );
         self.grenades.retain(|grenade| grenade.fuse_time > 0.0);
     }
 }

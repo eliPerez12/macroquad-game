@@ -27,11 +27,12 @@ impl World {
 
     pub async fn update(&mut self, player: &Player, camera: &GameCamera, assets: &Assets) {
         self.entities
-            .handle_shooting(assets, player, camera, &self.tile_map).await;
+            .handle_shooting(assets, player, camera, &self.tile_map)
+            .await;
         self.entities.update(player, camera);
     }
 
-    pub fn draw(&self, camera: &GameCamera, player: &Player, assets: &Assets) {
+    pub fn draw(&mut self, camera: &GameCamera, player: &Player, assets: &Assets) {
         // Draws example world
         self.tile_map.draw(assets, player, camera);
 

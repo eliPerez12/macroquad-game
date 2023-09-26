@@ -35,8 +35,7 @@ async fn main() {
         fuse_time: Grenade::MAX_FUSE_TIME,
         rotation: 0.0,
         rotation_speed: 0.1,
-        }
-    );
+    });
 
     // Main game loop
     loop {
@@ -52,7 +51,6 @@ async fn main() {
 
         fps_graph.update();
 
-        
         ////// Draw in world space //////
         set_camera(&camera);
 
