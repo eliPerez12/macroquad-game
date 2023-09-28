@@ -9,3 +9,5 @@ edition = "2021"
 macroquad = { version = "0.4.4", features = ["default"] }
 image = "0.24.7"
 rodio ="0.17.1"
+line_intersection = "0.4.0"
+geo = "0.4.0"

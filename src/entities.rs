@@ -12,7 +12,7 @@ pub struct Bullet {
     pub pos: Vec2,
     pub vel: f32,
     pub angle: f32,
-    pub hit_something: Option<Vec2>,
+    pub collisions: Vec<Vec2>,
     pub last_pos: Vec2,
 }
 
@@ -77,36 +77,41 @@ impl EntityManager {
             crate::world::LINE_LENGTH / 8.0 * 1.0,
             player.pos,
         );
+
         // Draw bullets
         for bullet in &self.bullets {
-            if is_visible(bullet.pos, &visible_tiles) {
-                match bullet.hit_something {
-                    None => {
-                        draw_line(
-                            bullet.pos.x,
-                            bullet.pos.y,
-                            bullet.last_pos.x,
-                            bullet.last_pos.y,
-                            0.18,
-                            WHITE,
-                        );
-                    },
-                    Some(intersect) => {
-                        dbg!(intersect);
-                        draw_circle(intersect.x, intersect.y, 1.0, RED);
-                    },
-                    
-                        //draw_line(
-                    //     intersect.x,
-                    //     intersect.y,
-                    //     bullet.last_pos.x,
-                    //     bullet.last_pos.y,
-                    //     0.18,
-                    //     WHITE,
-                    // )
-                }
-            };
+            if bullet.collisions.is_empty() {
+                draw_line(
+                    bullet.pos.x,
+                    bullet.pos.y,
+                    bullet.last_pos.x,
+                    bullet.last_pos.y,
+                    0.18,
+                    WHITE,
+                );
+            } else {
+                let closest_collision = {
+                    let mut collisions = Vec::from_iter(bullet.collisions.iter().map(|collision|{
+                            let (dx, dy) = (*collision - bullet.last_pos).into();
+                            let dist = (dx * dx + dy * dy).sqrt();
+                            (collision, dist)
+                        }
+                    ));
+                    collisions.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                    collisions[0]
+                };
+                draw_line(
+                    bullet.last_pos.x,
+                    bullet.last_pos.y,
+                    closest_collision.0.x,
+                    closest_collision.0.y,
+                    0.18,
+                    WHITE,
+                );
+                draw_circle(closest_collision.0.x, closest_collision.0.y, 0.33, WHITE);
+            }
         }
+
         // Draw grenades
         for grenade in &self.grenades {
             if is_visible(grenade.pos, &visible_tiles) {
@@ -123,6 +128,7 @@ impl EntityManager {
                 )
             }
         }
+
         // Draw players
         for other_player in self.other_players.iter().flatten() {
             if is_visible(other_player.pos, &visible_tiles) {
@@ -130,6 +136,7 @@ impl EntityManager {
             }
         }
     }
+
     pub fn draw_entity_hitboxes(&self) {
         for other_player in self.other_players.iter().flatten() {
             other_player.draw_hitbox();
@@ -153,7 +160,7 @@ impl EntityManager {
             && is_mouse_button_down(MouseButton::Right);
 
         // Remove old bullets that hit somthing
-        self.bullets.retain(|bullet| bullet.hit_something.is_none());
+        self.bullets.retain(|bullet| bullet.collisions.is_empty());
 
         // Handle spawning bullets
         if is_shooting {
@@ -197,7 +204,7 @@ impl EntityManager {
                 self.bullets.push(Bullet {
                     pos: bullet_pos,
                     vel: bullet_speed,
-                    hit_something: None,
+                    collisions: vec![],
                     angle: new_angle,
                     last_pos: bullet_pos,
                 });
@@ -231,6 +238,7 @@ impl EntityManager {
             ) * get_frame_time()
                 * 60.0;
         }
+
         let mut new_bullets = self.bullets.clone();
         new_bullets.iter_mut().for_each(|bullet| {
             let line = &LineSegment {
@@ -240,13 +248,11 @@ impl EntityManager {
                 y2: bullet.pos.y,
             };
             if bullet.vel.abs() <= 0.00 {
-                bullet.hit_something = Some(bullet.pos);
-            }
-            else if let Some(intersect) = tile_map.line_collides_with_tile(line) {
-                bullet.hit_something = Some(intersect);
-            }
-            else if let Some(intersect) = self.line_collides_with_entity(line) {
-                bullet.hit_something = Some(intersect);
+                bullet.collisions.push(bullet.pos);
+            } else if let Some(intersect) = tile_map.line_collides_with_tile(line) {
+                bullet.collisions.push(intersect);
+            } else if let Some(intersect) = self.line_collides_with_entity(line) {
+                bullet.collisions.push(intersect);
             }
         });
         self.bullets = new_bullets;
