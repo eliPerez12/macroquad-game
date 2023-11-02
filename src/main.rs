@@ -1,7 +1,7 @@
+use macroquad::prelude::*;
 use assets::Assets;
 use camera::GameCamera;
-use entities::{Bullet, Grenade};
-use macroquad::prelude::*;
+use entities::Grenade;
 use player::*;
 use ui::*;
 use utils::conf;
@@ -30,12 +30,6 @@ async fn main() {
     player.controller = PlayerController::User; // Allow control from the user
     camera.target = player.pos; // Teleport camera to player
     world.entities.add_player(Player::new(48, 48)); // Spawn other player
-    world.entities.grenades.push(Grenade {
-        pos: Vec2::new(50.0 * 8.0, 50.0 * 8.0),
-        fuse_time: Grenade::MAX_FUSE_TIME,
-        rotation: 0.0,
-        rotation_speed: 0.1,
-    });
 
     // Main game loop
     loop {
@@ -48,6 +42,16 @@ async fn main() {
             debug_on = !debug_on;
         }
 
+        if is_key_pressed(KeyCode::G) {
+            world.entities.grenades.push(Grenade {
+                pos: camera.screen_to_world(mouse_position().into()),
+                fuse_time: Grenade::MAX_FUSE_TIME,
+                rotation: 0.0,
+                rotation_speed: 0.1,
+            });
+        }
+    
+
         fps_graph.update();
 
         ////// Draw in world space //////
@@ -56,18 +60,6 @@ async fn main() {
         world.draw(&camera, &player, &assets);
         // Draw player
         player.draw(&assets);
-
-        if is_key_pressed(KeyCode::G) {
-            for _ in 0..60 {
-                world.entities.bullets.push(Bullet {
-                    pos: camera.screen_to_world(mouse_position().into()),
-                    last_pos: camera.screen_to_world(mouse_position().into()),
-                    vel: 3.3 + rand::gen_range(-1.5, 1.5),
-                    angle: rand::gen_range(0.0, 2.0 * std::f32::consts::PI),
-                    collisions: vec![],
-                })
-            }
-        }
 
         // Draw debug thingys
         if debug_on {

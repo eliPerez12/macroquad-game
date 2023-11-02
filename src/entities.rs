@@ -16,6 +16,7 @@ pub struct Bullet {
     pub last_pos: Vec2,
 }
 
+#[derive(Clone)]
 pub struct Grenade {
     pub pos: Vec2,
     pub rotation: f32,
@@ -45,19 +46,32 @@ impl EntityManager {
         }
     }
 
+    pub fn explode_grenade(&mut self, grenade: &Grenade) {
+        for _ in 0..60 {
+            self.bullets.push(Bullet {
+                pos: grenade.pos,
+                last_pos: grenade.pos,
+                vel: 3.3 + rand::gen_range(-1.5, 1.5),
+                angle: rand::gen_range(0.0, 2.0 * std::f32::consts::PI),
+                collisions: vec![],
+            })
+        }
+    }
+
     pub fn update(&mut self, player: &Player, camera: &GameCamera) {
         for other_player in self.other_players.iter_mut().flatten() {
             other_player.turn_to_face(player.pos, camera);
         }
     }
 
-    fn line_collides_with_entity(&self, line: &LineSegment) -> Option<Vec2> {
+    fn line_collides_with_entity(&self, line: &LineSegment) -> Vec<Vec2> {
         for player in self.other_players.iter().flatten() {
-            if let Some(intersect) = line.line_intersects_rect(player.get_hitbox()) {
-                return Some(intersect);
+            let intersects = line.line_intersects_rect(player.get_hitbox());
+            if !intersects.is_empty() {
+                return intersects;
             }
         }
-        None
+        vec![]
     }
 
     pub fn draw_entities(&mut self, assets: &Assets, player: &Player, tile_map: &TileMap) {
@@ -91,13 +105,12 @@ impl EntityManager {
                 );
             } else {
                 let closest_collision = {
-                    let mut collisions = Vec::from_iter(bullet.collisions.iter().map(|collision|{
+                    let collisions = Vec::from_iter(bullet.collisions.iter().map(|collision|{
                             let (dx, dy) = (*collision - bullet.last_pos).into();
                             let dist = (dx * dx + dy * dy).sqrt();
                             (collision, dist)
                         }
                     ));
-                    collisions.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
                     collisions[0]
                 };
                 draw_line(
@@ -108,7 +121,7 @@ impl EntityManager {
                     0.18,
                     WHITE,
                 );
-                draw_circle(closest_collision.0.x, closest_collision.0.y, 0.33, WHITE);
+                draw_circle(closest_collision.0.x, closest_collision.0.y, 0.28, WHITE);
             }
         }
 
@@ -117,8 +130,8 @@ impl EntityManager {
             if is_visible(grenade.pos, &visible_tiles) {
                 draw_texture_ex(
                     &assets.get_texture("grenade_unpinned.png"),
-                    grenade.pos.x,
-                    grenade.pos.y,
+                    grenade.pos.x - 7.0,
+                    grenade.pos.y - 7.0,
                     WHITE,
                     DrawTextureParams {
                         dest_size: Some(Vec2::new(14.0, 14.0)),
@@ -216,7 +229,7 @@ impl EntityManager {
         // Grenades
         for grenade in &mut self.grenades {
             let fuse_percent = grenade.fuse_time / Grenade::MAX_FUSE_TIME;
-            grenade.rotation_speed = Grenade::MAX_ROTATION_SPEED * fuse_percent;
+            grenade.rotation_speed = Grenade::MAX_ROTATION_SPEED * fuse_percent * 1.33;
             grenade.rotation += grenade.rotation_speed;
             grenade.fuse_time -= get_frame_time();
         }
@@ -249,13 +262,18 @@ impl EntityManager {
             };
             if bullet.vel.abs() <= 0.00 {
                 bullet.collisions.push(bullet.pos);
-            } else if let Some(intersect) = tile_map.line_collides_with_tile(line) {
-                bullet.collisions.push(intersect);
-            } else if let Some(intersect) = self.line_collides_with_entity(line) {
-                bullet.collisions.push(intersect);
             }
+            bullet.collisions.extend(tile_map.line_collides_with_tile(line));
+            bullet.collisions.extend(self.line_collides_with_entity(line));
         });
         self.bullets = new_bullets;
+        let grenades = self.grenades.clone();
+        for grenade in grenades {
+            if grenade.fuse_time <= 0.0 {
+                self.explode_grenade(&grenade)
+            }
+        }
+        
         self.grenades.retain(|grenade| grenade.fuse_time > 0.0);
     }
 }

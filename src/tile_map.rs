@@ -41,6 +41,7 @@ impl LineSegment {
         });
 
         if let Some(intersection) = segment1.relate(&segment2).unique_intersection() {
+            dbg!("Found Intercept");
             return Some(Vec2 {
                 x: intersection.x(),
                 y: intersection.y(),
@@ -80,20 +81,24 @@ impl LineSegment {
     }
 
     // Check if a line segment intersects with a rectangle
-    pub fn line_intersects_rect(&self, rect: Rect) -> Option<Vec2> {
+    pub fn line_intersects_rect(&self, rect: Rect) -> Vec<Vec2> {
         // Edges of the rectangle
         let (left, right, top, bottom) = LineSegment::from_rect(&rect);
+        let mut collisions = vec![];
 
         if let Some(intersect) = self.line_segments_intersect(&left) {
-            return Some(intersect);
-        } else if let Some(intersect) = self.line_segments_intersect(&right) {
-            return Some(intersect);
-        } else if let Some(intersect) = self.line_segments_intersect(&top) {
-            return Some(intersect);
-        } else if let Some(intersect) = self.line_segments_intersect(&bottom) {
-            return Some(intersect);
+            collisions.push(intersect);
         }
-        None
+        if let Some(intersect) = self.line_segments_intersect(&right) {
+            collisions.push(intersect);
+        }
+        if let Some(intersect) = self.line_segments_intersect(&top) {
+            collisions.push(intersect);
+        }
+        if let Some(intersect) = self.line_segments_intersect(&bottom) {
+            collisions.push(intersect);
+        }
+        collisions
     }
 
     pub fn draw(&self, color: Color) {
@@ -123,7 +128,7 @@ impl TileMap {
         false
     }
 
-    pub fn line_collides_with_tile(&self, line: &LineSegment) -> Option<Vec2> {
+    pub fn line_collides_with_tile(&self, line: &LineSegment) -> Vec<Vec2> {
         for (grid_x, grid_y) in self.collidables.iter() {
             if let Some(tile) = self.get_tile(*grid_x, *grid_y) {
                 if let Some(is_collider) = TILE_COLLIDER_LOOKUP.get(tile.0 as usize - 1) {
@@ -134,14 +139,15 @@ impl TileMap {
                         h: 8.0,
                     });
                     if *is_collider {
-                        if let Some(intersects) = intersects {
-                            return Some(intersects);
+                        if !intersects.is_empty() {
+                            dbg!(&intersects);
                         }
+                        return intersects;
                     }
                 }
             }
         }
-        None
+        vec![]
     }
 
     // Returns (tile_id, flip_x, flip_y, rotate)
